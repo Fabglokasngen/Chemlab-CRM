@@ -1,0 +1,6 @@
+{
+  "name": "ChemLab Sales CRM",
+  "description": "Collaborative Sales CRM and Ongoing Service Tracker for Chemical Testing Laboratories with automated sales incentive calculations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

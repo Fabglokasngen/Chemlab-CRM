@@ -1,0 +1,64 @@
+{
+  "databaseId": "ai-studio-b426de26-e765-454b-af40-6d46739bbdf8",
+  "collections": [
+    {
+      "name": "services",
+      "schema": {
+        "id": "string",
+        "serviceCode": "string",
+        "name": "string",
+        "category": "string",
+        "description": "string",
+        "method": "string",
+        "tatDays": "number",
+        "price": "number"
+      }
+    },
+    {
+      "name": "clients",
+      "schema": {
+        "id": "string",
+        "companyName": "string",
+        "industry": "string",
+        "address": "string",
+        "email": "string",
+        "phone": "string",
+        "picName": "string",
+        "picPhone": "string"
+      }
+    },
+    {
+      "name": "projects",
+      "schema": {
+        "id": "string",
+        "clientId": "string",
+        "clientName": "string",
+        "serviceId": "string",
+        "serviceName": "string"
+      }
+    },
+    {
+      "name": "incentives",
+      "schema": {
+        "id": "string",
+        "projectId": "string",
+        "clientName": "string",
+        "serviceName": "string"
+      }
+    },
+    {
+      "name": "sales_employees",
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "role": "string",
+        "targetMonthly": "number",
+        "achievedThisMonth": "number",
+        "status": "string",
+        "createdAt": "string"
+      }
+    }
+  ]
+}
