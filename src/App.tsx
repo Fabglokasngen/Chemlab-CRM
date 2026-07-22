@@ -3,8 +3,15 @@ import {
   Building2, LayoutDashboard, Briefcase, 
   Search, Plus, UserPlus, RefreshCcw, 
   NotebookTabs, ArrowLeftRight, Settings, 
-  Menu, X, Sparkles, HelpCircle, AlertCircle
+  Menu, X, Sparkles, HelpCircle, AlertCircle,
+  LogIn, UserCheck, ShieldCheck, KeyRound,
+  Pin, PanelLeft, PanelLeftClose
 } from 'lucide-react';
+
+// Auth Context & Modals
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { UserProfileModal } from './components/UserProfileModal';
 
 // Subcomponents
 import Dashboard from './components/Dashboard';
@@ -50,10 +57,18 @@ import {
 // Types
 import { Service, Client, Project, Incentive, SalesEmployee, ActivityNote, ProjectStatus, PaymentStatus } from './types';
 
-export default function App() {
-  // Navigation
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'ongoing' | 'tracker' | 'clients' | 'catalog' | 'incentives' | 'sales'>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+function AppContent() {
+  const { userProfile, isDemoMode } = useAuth();
+
+  // Navigation & Hover Sidebar
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'ongoing' | 'tracker' | 'clients' | 'catalog' | 'incentives'>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default hidden so hover activates
+  const [isHoveredSidebar, setIsHoveredSidebar] = useState(false);
+  const [isPinnedSidebar, setIsPinnedSidebar] = useState(false);
+
+  // Auth Modals state
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // States
   const [services, setServices] = useState<Service[]>([]);
@@ -88,11 +103,45 @@ export default function App() {
     loadData();
   }, []);
 
+  // Filtered dataset per logged in account for strict data isolation
+  const userUid = userProfile?.uid;
+  const userEmail = userProfile?.email?.toLowerCase();
+  const userName = userProfile?.displayName;
+
+  const isolatedClients = clients.filter(c => {
+    if (!c.userId && !c.ownerEmail) return true; // default mock visible to current user
+    return (
+      (userUid && c.userId === userUid) ||
+      (userEmail && c.ownerEmail?.toLowerCase() === userEmail) ||
+      (userName && c.assignedSales === userName)
+    );
+  });
+
+  const isolatedProjects = projects.filter(p => {
+    if (!p.userId && !p.ownerEmail) return true;
+    return (
+      (userUid && p.userId === userUid) ||
+      (userEmail && p.ownerEmail?.toLowerCase() === userEmail) ||
+      (userName && p.assignedSales === userName)
+    );
+  });
+
+  const isolatedIncentives = incentives.filter(inc => {
+    if (!inc.userId && !inc.ownerEmail) return true;
+    return (
+      (userUid && inc.userId === userUid) ||
+      (userEmail && inc.ownerEmail?.toLowerCase() === userEmail) ||
+      (userName && inc.salesName === userName)
+    );
+  });
+
   // --- SERVICE CATALOG COLLABORATIVE CRUDS ---
   const handleAddService = async (newService: Omit<Service, 'id'>) => {
     const srv: Service = {
       ...newService,
-      id: `s-${Date.now()}`
+      id: `s-${Date.now()}`,
+      userId: userUid,
+      ownerEmail: userEmail
     };
     const updated = [...services, srv];
     setServices(updated);
@@ -128,13 +177,16 @@ export default function App() {
     const cli: Client = {
       ...newClient,
       id: `c-${Date.now()}`,
+      assignedSales: newClient.assignedSales || userName || 'Sales Officer',
       createdAt: new Date().toISOString(),
+      userId: userUid,
+      ownerEmail: userEmail,
       activityNotes: [
         {
           id: `act-${Date.now()}`,
           date: new Date().toISOString().split('T')[0],
-          note: `Lead baru dibuat dengan funnel status: ${newClient.status}.`,
-          author: newClient.assignedSales
+          note: `New client record created with initial status: ${newClient.status}.`,
+          author: newClient.assignedSales || userName || 'System'
         }
       ]
     };
@@ -152,15 +204,14 @@ export default function App() {
     const updatedList = clients.map(c => {
       if (c.id === id) {
         const nextClient = { ...c, ...updatedFields };
-        // Check if client transitioned to WON, and update history log
         if (updatedFields.status && updatedFields.status !== c.status) {
           nextClient.activityNotes = [
             ...nextClient.activityNotes,
             {
               id: `act-${Date.now()}`,
               date: new Date().toISOString().split('T')[0],
-              note: `Status berganti dari ${c.status} menjadi ${updatedFields.status}.`,
-              author: 'Sistem CRM'
+              note: `Status changed from ${c.status} to ${updatedFields.status}.`,
+              author: 'CRM System'
             }
           ];
         }
@@ -225,7 +276,10 @@ export default function App() {
     const proj: Project = {
       ...newProject,
       id: `LAB-2026-00${projIdNum}`,
-      quotationNumber: `QT-2026-0${100 + projIdNum}`
+      assignedSales: newProject.assignedSales || userName || 'Sales Officer',
+      quotationNumber: `QT-2026-0${100 + projIdNum}`,
+      userId: userUid,
+      ownerEmail: userEmail
     };
     const updated = [...projects, proj];
     setProjects(updated);
@@ -273,7 +327,9 @@ export default function App() {
                 incentiveValue: incAmount,
                 paymentStatus: 'Paid',
                 isPaid: false,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                userId: userUid,
+                ownerEmail: userEmail
               };
               newIncentiveToAdd = newInc;
               targetClientToUpdate = { id: client.id, data: { isFirstTransaction: false } };
@@ -338,43 +394,6 @@ export default function App() {
     }
   };
 
-  // --- SALES EMPLOYEES COLLABORATIVE CRUDS ---
-  const handleAddEmployee = async (newEmp: Omit<SalesEmployee, 'id' | 'createdAt' | 'achievedThisMonth'>) => {
-    const emp: SalesEmployee = {
-      ...newEmp,
-      id: `sales-${Date.now()}`,
-      achievedThisMonth: 0,
-      createdAt: new Date().toISOString()
-    };
-    const updated = [...employees, emp];
-    setEmployees(updated);
-    try {
-      await dbAddSalesEmployee(emp);
-    } catch (e) {
-      console.error('Error adding sales employee to Firestore:', e);
-    }
-  };
-
-  const handleUpdateEmployee = async (id: string, updatedFields: Partial<SalesEmployee>) => {
-    const updatedList = employees.map(e => e.id === id ? { ...e, ...updatedFields } : e);
-    setEmployees(updatedList);
-    try {
-      await dbUpdateSalesEmployee(id, updatedFields);
-    } catch (e) {
-      console.error('Error updating sales employee in Firestore:', e);
-    }
-  };
-
-  const handleDeleteEmployee = async (id: string) => {
-    const updatedList = employees.filter(e => e.id !== id);
-    setEmployees(updatedList);
-    try {
-      await dbDeleteSalesEmployee(id);
-    } catch (e) {
-      console.error('Error deleting sales employee from Firestore:', e);
-    }
-  };
-
   // --- RECONCILE RESET STATE BUTTON ---
   const handleRevertToInitialSeeder = async () => {
     if (confirm('Revert all laboratory changes back to standard initial seeder datasets?')) {
@@ -386,11 +405,11 @@ export default function App() {
         setProjects(INITIAL_PROJECTS);
         setIncentives(INITIAL_INCENTIVES);
         setEmployees(INITIAL_SALES_EMPLOYEES);
-        alert('Data reset to standard chem seeder successful!');
+        alert('Data reset to standard initial seeder successful!');
         setActiveTab('dashboard');
       } catch (err) {
         console.error('Reset database failed:', err);
-        alert('Reset database gagal, mohon coba kembali.');
+        alert('Failed to reset database, please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -400,10 +419,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-750 selection:bg-teal-500/10 selection:text-teal-900">
       
-      {/* SIDEBAR NAVIGATION - DESKTOP */}
+      {/* HOVER TRIGGER STRIP ON LEFT SCREEN EDGE */}
+      <div 
+        onMouseEnter={() => setIsHoveredSidebar(true)}
+        className="fixed top-0 left-0 bottom-0 w-3.5 z-40 hidden md:block cursor-pointer hover:bg-teal-500/20 transition-colors group"
+        title="Hover cursor here to expand the navigation menu"
+      >
+        <div className="h-full w-1 bg-teal-500/40 group-hover:bg-teal-500 transition-colors"></div>
+      </div>
+
+      {/* SIDEBAR NAVIGATION - HOVER & FIXED */}
       <aside 
-        className={`bg-slate-900 border-r border-slate-800 text-slate-300 w-64 shrink-0 transition-transform duration-300 fixed md:relative h-screen z-40 flex flex-col justify-between ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 overflow-hidden border-none'
+        onMouseEnter={() => setIsHoveredSidebar(true)}
+        onMouseLeave={() => setIsHoveredSidebar(false)}
+        className={`bg-slate-900 border-r border-slate-800 text-slate-300 w-64 shrink-0 transition-all duration-300 fixed h-screen z-50 flex flex-col justify-between shadow-2xl ${
+          (isSidebarOpen || isHoveredSidebar || isPinnedSidebar) 
+            ? 'translate-x-0 opacity-100 pointer-events-auto' 
+            : '-translate-x-full opacity-0 pointer-events-none'
         }`}
       >
         <div className="p-5 space-y-6">
@@ -418,13 +450,28 @@ export default function App() {
                 <span className="text-[10px] text-slate-500 block font-semibold tracking-wider font-mono uppercase">LAB COMPLIANCE</span>
               </div>
             </div>
-            {/* Close side bar on mobile */}
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md md:hidden cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            
+            <div className="flex items-center gap-1">
+              {/* Pin sidebar toggle for desktop */}
+              <button 
+                type="button"
+                onClick={() => setIsPinnedSidebar(!isPinnedSidebar)}
+                className={`p-1.5 rounded-lg text-xs font-semibold hidden md:flex items-center gap-1 transition-colors cursor-pointer ${
+                  isPinnedSidebar ? 'bg-teal-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+                title={isPinnedSidebar ? "Unpin sidebar (Auto-hide on hover leave)" : "Pin sidebar permanently"}
+              >
+                <Pin className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Close side bar on mobile */}
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md md:hidden cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Links list */}
@@ -432,7 +479,7 @@ export default function App() {
             
             <button
               id="nav-dashboard"
-              onClick={() => { setActiveTab('dashboard'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'dashboard' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
@@ -443,7 +490,7 @@ export default function App() {
 
             <button
               id="nav-ongoing"
-              onClick={() => { setActiveTab('ongoing'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('ongoing'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'ongoing' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
@@ -454,7 +501,7 @@ export default function App() {
 
             <button
               id="nav-tracker"
-              onClick={() => { setActiveTab('tracker'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('tracker'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'tracker' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
@@ -465,18 +512,18 @@ export default function App() {
 
             <button
               id="nav-clients"
-              onClick={() => { setActiveTab('clients'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('clients'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'clients' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
             >
               <UserPlus className="h-4 w-4 shrink-0" />
-              New Client / Leads
+              Client
             </button>
 
             <button
               id="nav-catalog"
-              onClick={() => { setActiveTab('catalog'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('catalog'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'catalog' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
@@ -487,24 +534,13 @@ export default function App() {
 
             <button
               id="nav-incentives"
-              onClick={() => { setActiveTab('incentives'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
+              onClick={() => { setActiveTab('incentives'); setIsSidebarOpen(false); setIsHoveredSidebar(false); }}
               className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
                 activeTab === 'incentives' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
               }`}
             >
-              <Sparkles className="h-4 w-4 shrink-0 animate-pulse" />
+              <Sparkles className="h-4 w-4 shrink-0 animate-pulse text-amber-400" />
               Incentives
-            </button>
-
-            <button
-              id="nav-sales"
-              onClick={() => { setActiveTab('sales'); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
-              className={`w-full text-left px-3.5 py-3 rounded-lg text-xs font-semibold flex items-center gap-3 transition-colors cursor-pointer ${
-                activeTab === 'sales' ? 'bg-teal-600 text-white shadow-xs' : 'hover:bg-slate-800 hover:text-white text-slate-400'
-              }`}
-            >
-              <UserPlus className="h-4 w-4 shrink-0" />
-              Sales Karyawan
             </button>
 
           </nav>
@@ -512,9 +548,14 @@ export default function App() {
 
         {/* Revert dataset & details footer */}
         <div className="p-4 bg-slate-950 text-[10px] space-y-2 border-t border-slate-800">
-          <div className="text-slate-500 font-mono flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            RECONCILE OPEN ACCESS ENABLED
+          <div className="text-slate-500 font-mono flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              DATA ISOLATION ACTIVE
+            </span>
+            <span className="text-[9px] text-teal-400 font-sans font-semibold">
+              {isPinnedSidebar ? 'Pinned' : 'Auto-Hide'}
+            </span>
           </div>
           <button 
             type="button"
@@ -532,29 +573,65 @@ export default function App() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              onMouseEnter={() => setIsHoveredSidebar(true)}
+              className="p-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Hover left or click to open menu"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h1 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
               <span>ChemLab Sales CRM</span>
-              <span className="text-[10px] bg-slate-100 text-slate-500 font-normal px-2 py-0.5 rounded-md font-mono hidden sm:inline-block">v1.17</span>
+              <span className="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2 py-0.5 rounded-md hidden md:inline-flex items-center gap-1 border border-teal-100">
+                <PanelLeft className="w-3 h-3 text-teal-600" />
+                Hover Left to Navigate
+              </span>
             </h1>
           </div>
           
-          <div className="flex items-center gap-3">
-            {/* Simulation note ticker */}
-            <div className="text-[11px] text-slate-500 font-medium font-sans flex items-center gap-1 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-100">
+          <div className="flex items-center gap-2.5">
+            {/* Mode status indicator */}
+            <div className="text-[11px] text-slate-500 font-medium font-sans hidden md:flex items-center gap-1.5 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-200/80">
               <span className="inline-block relative">
-                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className={`animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75 ${isDemoMode ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isDemoMode ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
               </span>
-              <span>All Staff Edit Access</span>
+              <span className="font-semibold text-slate-700">{isDemoMode ? 'Demo Account' : 'Firebase Authenticated'}</span>
             </div>
             
-            <div className="h-8 w-8 rounded-full bg-teal-650 text-white font-bold flex items-center justify-center font-mono text-xs cursor-default" title="Your sandbox email: fabgloken20@gmail.com">
-              FL
-            </div>
+            {/* User Profile / Auth Trigger */}
+            {userProfile ? (
+              <button
+                id="btn-user-profile"
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 p-1.5 pr-3 rounded-xl border border-slate-200 transition cursor-pointer"
+                title="View Profile & Manage Account"
+              >
+                {userProfile.photoURL ? (
+                  <img 
+                    src={userProfile.photoURL} 
+                    alt={userProfile.displayName} 
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-300"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center text-xs">
+                    {userProfile.displayName?.slice(0, 2).toUpperCase() || 'US'}
+                  </div>
+                )}
+                <div className="text-left hidden sm:block">
+                  <div className="text-xs font-bold text-slate-800 line-clamp-1 leading-tight">{userProfile.displayName}</div>
+                  <div className="text-[9px] font-semibold text-teal-700">{userProfile.role || 'User Account'}</div>
+                </div>
+              </button>
+            ) : (
+              <button
+                id="btn-open-auth"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -563,22 +640,22 @@ export default function App() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 space-y-4">
               <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm font-semibold text-slate-500 font-sans">Menghubungkan & Memuat Data dari Firebase...</p>
+              <p className="text-sm font-semibold text-slate-500 font-sans">Connecting &amp; Fetching Data from Firebase...</p>
             </div>
           ) : (
             <>
               {activeTab === 'dashboard' && (
                 <Dashboard 
-                  clients={clients} 
-                  projects={projects} 
+                  clients={isolatedClients} 
+                  projects={isolatedProjects} 
                   services={services} 
                 />
               )}
 
               {activeTab === 'ongoing' && (
                 <OngoingServices 
-                  projects={projects}
-                  clients={clients}
+                  projects={isolatedProjects}
+                  clients={isolatedClients}
                   services={services}
                   onAddProject={handleAddProject}
                   onUpdateProject={handleUpdateProject}
@@ -588,8 +665,8 @@ export default function App() {
 
               {activeTab === 'tracker' && (
                 <ServiceTracker 
-                  projects={projects}
-                  clients={clients}
+                  projects={isolatedProjects}
+                  clients={isolatedClients}
                   services={services}
                   onUpdateProjectStatus={handleUpdateProjectStatus}
                   onAddProject={handleAddProject}
@@ -598,7 +675,7 @@ export default function App() {
 
               {activeTab === 'clients' && (
                 <NewClient 
-                  clients={clients}
+                  clients={isolatedClients}
                   onAddClient={handleAddClient}
                   onUpdateClient={handleUpdateClient}
                   onDeleteClient={handleDeleteClient}
@@ -617,19 +694,10 @@ export default function App() {
 
               {activeTab === 'incentives' && (
                 <Incentives 
-                  projects={projects}
-                  clients={clients}
-                  incentives={incentives}
+                  projects={isolatedProjects}
+                  clients={isolatedClients}
+                  incentives={isolatedIncentives}
                   onDisburseIncentive={handleDisburseIncentive}
-                />
-              )}
-
-              {activeTab === 'sales' && (
-                <SalesEmployees
-                  employees={employees}
-                  onAddEmployee={handleAddEmployee}
-                  onUpdateEmployee={handleUpdateEmployee}
-                  onDeleteEmployee={handleDeleteEmployee}
                 />
               )}
             </>
@@ -637,6 +705,25 @@ export default function App() {
         </main>
       </div>
 
+      {/* Auth & User Profile Modals */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+      <UserProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+      />
+
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

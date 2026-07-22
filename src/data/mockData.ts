@@ -72,9 +72,11 @@ export const INITIAL_CLIENTS: Client[] = [
     status: 'Won',
     isFirstTransaction: false, // repeat clients
     createdAt: '2026-01-15T09:00:00Z',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id',
     activityNotes: [
-      { id: 'n1', date: '2026-01-15', note: 'Kontak pertama melalui email, tertarik uji proksimat produk mi instan baru.', author: 'Budi Santoso' },
-      { id: 'n2', date: '2026-01-18', note: 'Sampel dikirim dan quotation disetujui. Pembayaran DP selesai.', author: 'Budi Santoso' }
+      { id: 'n1', date: '2026-01-15', note: 'First contact via email regarding proximate testing for new instant noodle product.', author: 'Budi Santoso' },
+      { id: 'n2', date: '2026-01-18', note: 'Sample delivered and quotation approved.', author: 'Budi Santoso' }
     ]
   },
   {
@@ -95,9 +97,11 @@ export const INITIAL_CLIENTS: Client[] = [
     status: 'Won',
     isFirstTransaction: true, // Brand New Client
     createdAt: '2026-05-10T10:30:00Z',
+    userId: 'demo-sales-03',
+    ownerEmail: 'siti.rahma@labindonesia.co.id',
     activityNotes: [
-      { id: 'n3', date: '2026-05-10', note: 'Bertemu di pameran. Butuh uji kadar cemaran timbal (Pb) di produk kosmetik bedak bayi terbaru.', author: 'Siti Rahma' },
-      { id: 'n4', date: '2026-05-12', note: 'Mengirimkan penawaran khusus diskon perdana 10% untuk uji logam berat.', author: 'Siti Rahma' }
+      { id: 'n3', date: '2026-05-10', note: 'Met at expo. Needs lead (Pb) heavy metal testing on new baby powder line.', author: 'Siti Rahma' },
+      { id: 'n4', date: '2026-05-12', note: 'Sent special introductory proposal with 10% discount.', author: 'Siti Rahma' }
     ]
   },
   {
@@ -114,13 +118,15 @@ export const INITIAL_CLIENTS: Client[] = [
     picPhone: '0813-2233-4455',
     leadSource: 'Website',
     potentialRevenue: 35000000,
-    assignedSales: 'Andi Wijaya',
+    assignedSales: 'Fabian Lawson',
     status: 'Negotiation',
     isFirstTransaction: true,
     createdAt: '2026-06-01T14:15:00Z',
+    userId: 'demo-admin-01',
+    ownerEmail: 'fabian@labindonesia.co.id',
     activityNotes: [
-      { id: 'n5', date: '2026-06-01', note: 'Mengisi form di website untuk pengujian air limbah pertambangan batubara.', author: 'Andi Wijaya' },
-      { id: 'n6', date: '2026-06-05', note: 'Mengirimkan draf quotation harga paket pengujian bulanan (bulky volume). Sedang direview direksi.', author: 'Andi Wijaya' }
+      { id: 'n5', date: '2026-06-01', note: 'Inquired on website for coal mining wastewater testing.', author: 'Fabian Lawson' },
+      { id: 'n6', date: '2026-06-05', note: 'Sent draft quotation for monthly testing package.', author: 'Fabian Lawson' }
     ]
   },
   {
@@ -141,8 +147,10 @@ export const INITIAL_CLIENTS: Client[] = [
     status: 'Proposal Sent',
     isFirstTransaction: true,
     createdAt: '2026-06-11T08:45:00Z',
+    userId: 'demo-sales-03',
+    ownerEmail: 'siti.rahma@labindonesia.co.id',
     activityNotes: [
-      { id: 'n7', date: '2026-06-11', note: 'Tertarik menguji residu pestisida di sampel sayur kubis ekspor ke Singapura.', author: 'Siti Rahma' }
+      { id: 'n7', date: '2026-06-11', note: 'Interested in pesticide residue testing for cabbage export to Singapore.', author: 'Siti Rahma' }
     ]
   },
   {
@@ -157,14 +165,40 @@ export const INITIAL_CLIENTS: Client[] = [
     picPosition: 'QC Chemist Specialist',
     picEmail: 'rina.h@globaltekstil.co.id',
     picPhone: '0812-4455-6677',
-    leadSource: 'Pencarian Google (SEO)',
+    leadSource: 'Search Engine',
     potentialRevenue: 6000000,
     assignedSales: 'Budi Santoso',
     status: 'Won',
     isFirstTransaction: true, // Brand New Client
     createdAt: '2026-05-18T11:00:00Z',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id',
     activityNotes: [
-      { id: 'n8', date: '2026-05-18', note: 'Butuh uji pH dan logam berat khusus pada pewarna kimia tekstil ekspor.', author: 'Budi Santoso' }
+      { id: 'n8', date: '2026-05-18', note: 'Requires pH and heavy metals testing for textile dyes export.', author: 'Budi Santoso' }
+    ]
+  },
+  {
+    id: 'c6',
+    companyName: 'PT Nusa Chemia Analytical',
+    industry: 'Chemicals & Environment',
+    address: 'Kawasan Industri MM2100, Cikarang Barat, Bekasi',
+    email: 'contact@nusachemia.co.id',
+    phone: '021-89981122',
+    website: 'www.nusachemia.co.id',
+    picName: 'Dr. Eko Prasetyo',
+    picPosition: 'Head of Lab Analysis',
+    picEmail: 'eko.p@nusachemia.co.id',
+    picPhone: '0811-3344-5566',
+    leadSource: 'Partner',
+    potentialRevenue: 18000000,
+    assignedSales: 'Dr. Aris Setiawan',
+    status: 'Won',
+    isFirstTransaction: true,
+    createdAt: '2026-06-02T09:15:00Z',
+    userId: 'demo-lab-04',
+    ownerEmail: 'aris.tech@labindonesia.co.id',
+    activityNotes: [
+      { id: 'n9', date: '2026-06-02', note: 'Inter-laboratory comparison testing for chemical standards.', author: 'Dr. Aris Setiawan' }
     ]
   }
 ];
@@ -186,7 +220,9 @@ export const INITIAL_PROJECTS: Project[] = [
     totalPrice: 7500000, // 3 * 2.5jt
     paymentStatus: 'Paid',
     quotationNumber: 'QT-2026-0129',
-    idElsa: '381902'
+    idElsa: '381902',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id'
   },
   {
     id: 'LAB-2026-002',
@@ -202,9 +238,11 @@ export const INITIAL_PROJECTS: Project[] = [
     status: 'In Progress',
     progressPercent: 65,
     totalPrice: 15000000, // 10 * 1.5jt
-    paymentStatus: 'Paid', // Pre-paid, which satisfies paid condition for first transaction!
+    paymentStatus: 'Paid',
     quotationNumber: 'QT-2026-0144',
-    idElsa: '810574'
+    idElsa: '810574',
+    userId: 'demo-sales-03',
+    ownerEmail: 'siti.rahma@labindonesia.co.id'
   },
   {
     id: 'LAB-2026-003',
@@ -217,12 +255,14 @@ export const INITIAL_PROJECTS: Project[] = [
     startDate: '2026-06-14',
     dueDate: '2026-06-21',
     assignedSales: 'Budi Santoso',
-    status: 'Completed', // Met the testing completeness condition!
+    status: 'Completed',
     progressPercent: 100,
     totalPrice: 6000000, // 4 * 1.5jt
-    paymentStatus: 'Paid', // Met payment condition!
+    paymentStatus: 'Paid',
     quotationNumber: 'QT-2026-0158',
-    idElsa: '629851'
+    idElsa: '629851',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id'
   },
   {
     id: 'LAB-2026-004',
@@ -240,7 +280,9 @@ export const INITIAL_PROJECTS: Project[] = [
     totalPrice: 8400000, // 2 * 4.2jt
     paymentStatus: 'Unpaid',
     quotationNumber: 'QT-2026-0160',
-    idElsa: '442109'
+    idElsa: '442109',
+    userId: 'demo-sales-03',
+    ownerEmail: 'siti.rahma@labindonesia.co.id'
   },
   {
     id: 'LAB-2026-005',
@@ -251,21 +293,63 @@ export const INITIAL_PROJECTS: Project[] = [
     serviceCategory: 'Mikrobiologi',
     sampleQuantity: 5,
     startDate: '2026-06-10',
-    dueDate: '2026-06-16', // Overdue since current date is 2026-06-18
+    dueDate: '2026-06-16',
     assignedSales: 'Budi Santoso',
     status: 'In Progress',
     progressPercent: 40,
     totalPrice: 4750000,
     paymentStatus: 'Unpaid',
     quotationNumber: 'QT-2026-0165',
-    idElsa: '298101'
+    idElsa: '298101',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id'
+  },
+  {
+    id: 'LAB-2026-006',
+    clientId: 'c3',
+    clientName: 'PT Energy Makmur Sejahtera',
+    serviceId: 's3',
+    serviceName: 'Analisis Kualitas Air Limbah Industri Komprehensif',
+    serviceCategory: 'Lingkungan',
+    sampleQuantity: 5,
+    startDate: '2026-06-16',
+    dueDate: '2026-06-26',
+    assignedSales: 'Fabian Lawson',
+    status: 'Accepted',
+    progressPercent: 20,
+    totalPrice: 17500000,
+    paymentStatus: 'Unpaid',
+    quotationNumber: 'QT-2026-0170',
+    idElsa: '912044',
+    userId: 'demo-admin-01',
+    ownerEmail: 'fabian@labindonesia.co.id'
+  },
+  {
+    id: 'LAB-2026-007',
+    clientId: 'c6',
+    clientName: 'PT Nusa Chemia Analytical',
+    serviceId: 's1',
+    serviceName: 'Uji Kadar Logam Berat (Pb, Cd, Hg, As)',
+    serviceCategory: 'Kimia Anorganik',
+    sampleQuantity: 6,
+    startDate: '2026-06-11',
+    dueDate: '2026-06-18',
+    assignedSales: 'Dr. Aris Setiawan',
+    status: 'Completed',
+    progressPercent: 100,
+    totalPrice: 9000000,
+    paymentStatus: 'Paid',
+    quotationNumber: 'QT-2026-0175',
+    idElsa: '519203',
+    userId: 'demo-lab-04',
+    ownerEmail: 'aris.tech@labindonesia.co.id'
   }
 ];
 
 export const INITIAL_INCENTIVES: Incentive[] = [
   {
     id: 'inc-1',
-    projectId: 'LAB-2026-003', // LAB-2026-003 is PT Global Tekstil Mandiri. It's completed and paid, First Transaction is true.
+    projectId: 'LAB-2026-003',
     clientName: 'PT Global Tekstil Mandiri',
     serviceName: 'Uji Kadar Logam Berat (Pb, Cd, Hg, As)',
     salesName: 'Budi Santoso',
@@ -273,7 +357,23 @@ export const INITIAL_INCENTIVES: Incentive[] = [
     incentiveValue: 150000, // 2.5% of 6,000,000
     paymentStatus: 'Paid',
     isPaid: true,
-    createdAt: '2026-06-15T17:00:00Z'
+    createdAt: '2026-06-15T17:00:00Z',
+    userId: 'demo-mgr-02',
+    ownerEmail: 'budi.santoso@labindonesia.co.id'
+  },
+  {
+    id: 'inc-2',
+    projectId: 'LAB-2026-007',
+    clientName: 'PT Nusa Chemia Analytical',
+    serviceName: 'Uji Kadar Logam Berat (Pb, Cd, Hg, As)',
+    salesName: 'Dr. Aris Setiawan',
+    serviceValue: 9000000,
+    incentiveValue: 225000, // 2.5% of 9,000,000
+    paymentStatus: 'Paid',
+    isPaid: true,
+    createdAt: '2026-06-17T14:00:00Z',
+    userId: 'demo-lab-04',
+    ownerEmail: 'aris.tech@labindonesia.co.id'
   }
 ];
 

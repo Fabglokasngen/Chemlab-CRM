@@ -2,6 +2,17 @@
   "databaseId": "ai-studio-b426de26-e765-454b-af40-6d46739bbdf8",
   "collections": [
     {
+      "name": "users",
+      "schema": {
+        "uid": "string",
+        "displayName": "string",
+        "email": "string",
+        "role": "string",
+        "department": "string",
+        "phoneNumber": "string"
+      }
+    },
+    {
       "name": "services",
       "schema": {
         "id": "string",
@@ -11,7 +22,9 @@
         "description": "string",
         "method": "string",
         "tatDays": "number",
-        "price": "number"
+        "price": "number",
+        "userId": "string",
+        "ownerEmail": "string"
       }
     },
     {
@@ -24,7 +37,9 @@
         "email": "string",
         "phone": "string",
         "picName": "string",
-        "picPhone": "string"
+        "picPhone": "string",
+        "userId": "string",
+        "ownerEmail": "string"
       }
     },
     {
@@ -34,7 +49,9 @@
         "clientId": "string",
         "clientName": "string",
         "serviceId": "string",
-        "serviceName": "string"
+        "serviceName": "string",
+        "userId": "string",
+        "ownerEmail": "string"
       }
     },
     {
@@ -43,7 +60,9 @@
         "id": "string",
         "projectId": "string",
         "clientName": "string",
-        "serviceName": "string"
+        "serviceName": "string",
+        "userId": "string",
+        "ownerEmail": "string"
       }
     },
     {

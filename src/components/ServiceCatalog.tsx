@@ -32,7 +32,7 @@ export default function ServiceCatalog({
   const [formData, setFormData] = useState({
     serviceCode: '',
     name: '',
-    category: 'Kimia Anorganik',
+    category: 'Inorganic Chemistry',
     description: '',
     method: '',
     tatDays: 7,
@@ -60,7 +60,7 @@ export default function ServiceCatalog({
 
     // Check code unique
     if (services.some(s => s.serviceCode.toUpperCase() === formData.serviceCode.toUpperCase())) {
-      alert('Kode Layanan sudah terdaftar, mohon gunakan kode unik!');
+      alert('Service Code is already registered, please use a unique code!');
       return;
     }
 
@@ -72,7 +72,7 @@ export default function ServiceCatalog({
     setFormData({
       serviceCode: `CHEM-00${lastNum}`,
       name: '',
-      category: 'Kimia Anorganik',
+      category: 'Inorganic Chemistry',
       description: '',
       method: '',
       tatDays: 7,
@@ -106,8 +106,6 @@ export default function ServiceCatalog({
   });
 
   // Printer-friendly Catalog PDF Trigger
-  // Instead of installing heavy PDF plugins that easily crash during compilation, we use
-  // CSS window.print() style formatting to trigger the system's native Print to PDF engine.
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -117,10 +115,10 @@ export default function ServiceCatalog({
         <td style="padding: 10px; font-family: monospace; font-weight: bold;">${s.serviceCode}</td>
         <td style="padding: 10px;">
           <strong style="color: #0f172a;">${s.name}</strong><br/>
-          <small style="color: #64748b;">Metode: ${s.method}</small>
+          <small style="color: #64748b;">Method: ${s.method}</small>
         </td>
         <td style="padding: 10px; color: #4f46e5; font-weight: 500;">${s.category}</td>
-        <td style="padding: 10px; text-align: center;">${s.tatDays} Hari</td>
+        <td style="padding: 10px; text-align: center;">${s.tatDays} Days</td>
         <td style="padding: 10px; text-align: right; font-weight: bold; font-family: monospace;">
           ${formatIDR(s.price)}
         </td>
@@ -130,7 +128,7 @@ export default function ServiceCatalog({
     printWindow.document.write(`
       <html>
         <head>
-          <title>Daftar Harga & Katalog Layanan Laboratorium Kimia</title>
+          <title>Chemical Laboratory Testing Service Catalog & Price List</title>
           <style>
             body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; color: #334155; padding: 40px; }
             header { text-align: center; border-bottom: 3px double #0d9488; padding-bottom: 20px; margin-bottom: 30px; }
@@ -144,20 +142,20 @@ export default function ServiceCatalog({
         <body>
           <header>
             <h1>ChemLab Laboratories Inc.</h1>
-            <p>Jalan Scientia Boulevard Raya Terpadu No. 90, Kawasan Pusat Penelitian Sains Indonesia</p>
-            <p>Telp: (021) 880-990-21 | Email: support@chemlab-labs.com | Website: www.chemlab-labs.com</p>
+            <p>Jalan Scientia Boulevard Raya Terpadu No. 90, Science Research Center Zone</p>
+            <p>Tel: (021) 880-990-21 | Email: support@chemlab-labs.com | Website: www.chemlab-labs.com</p>
           </header>
           
-          <h2 style="color: #0f766e; text-align: center; font-size: 16px;">SPESIFIKASI DAFTAR HARGA & METODE PENGUJIAN LENGKAP</h2>
+          <h2 style="color: #0f766e; text-align: center; font-size: 16px;">COMPLETE SPECIFICATION OF TESTING PRICES & STANDARD METHODS</h2>
           
           <table>
             <thead>
               <tr>
-                <th style="width: 12%;">KODE</h3>
-                <th style="width: 45%;">LAYANAN ANALISIS & METODE STANDARD</th>
-                <th style="width: 20%;">KATEGORI</th>
-                <th style="width: 10%; text-align: center;">TAT (HARI)</th>
-                <th style="width: 13%; text-align: right;">BIAYA PRICE (RP)</th>
+                <th style="width: 12%;">CODE</th>
+                <th style="width: 45%;">ANALYSIS SERVICE & STANDARD METHOD</th>
+                <th style="width: 20%;">CATEGORY</th>
+                <th style="width: 10%; text-align: center;">TAT (DAYS)</th>
+                <th style="width: 13%; text-align: right;">PRICE (IDR)</th>
               </tr>
             </thead>
             <tbody>
@@ -166,8 +164,8 @@ export default function ServiceCatalog({
           </table>
 
           <footer>
-            <p>Seluruh harga di atas belum termasuk PPN 11% dan biaya akomodasi pengambilan sampel di luar lab.</p>
-            <p>Dokumen katalog ini diterbitkan secara digital pada tanggal ${new Date().toLocaleDateString('id-ID')} dan valid sebagai patokan quotation legal.</p>
+            <p>All prices above exclude 11% VAT and sample collection accommodation costs outside the laboratory.</p>
+            <p>This catalog document was digitally generated on ${new Date().toLocaleDateString('en-US')} and is valid as an official quotation baseline.</p>
           </footer>
           <script>
             window.onload = function() { window.print(); window.close(); }
@@ -186,7 +184,7 @@ export default function ServiceCatalog({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Lab Service Catalog Manager</h2>
-          <p className="text-sm text-slate-400 mt-1">Daftar harga satuan pengujian kimia, spesifikasi alat uji instrumen (ICP-OES, GC-MS), and standardisasi akreditasi SNI/ISO.</p>
+          <p className="text-sm text-slate-400 mt-1">Unit price list for chemical testing, instrument specifications (ICP-OES, GC-MS), and ISO/SNI accreditation standards.</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Download booklet */}
@@ -194,7 +192,7 @@ export default function ServiceCatalog({
             onClick={handleDownloadPDF}
             className="flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer"
           >
-            <Download className="h-3.5 w-3.5" /> Download PDF Katalog
+            <Download className="h-3.5 w-3.5" /> Download Catalog PDF
           </button>
           
           {/* New catalogue */}
@@ -202,7 +200,7 @@ export default function ServiceCatalog({
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer"
           >
-            <Plus className="h-3.5 w-3.5" /> Tambah Katalog Baru
+            <Plus className="h-3.5 w-3.5" /> Add New Catalog Entry
           </button>
         </div>
       </div>
@@ -213,7 +211,7 @@ export default function ServiceCatalog({
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari kode layanan, detail instrumen alat, metode pengujian (ICP, GC-MS)..."
+            placeholder="Search service code, instrument details, testing method (ICP, GC-MS)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden bg-slate-50/50"
@@ -227,7 +225,7 @@ export default function ServiceCatalog({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="w-full py-1.8 text-xs text-slate-700 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-teal-500"
           >
-            <option value="All">Tampilkan Semua Kategori</option>
+            <option value="All">All Categories</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
         </div>
@@ -251,14 +249,14 @@ export default function ServiceCatalog({
               
               <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-150/70 text-xs text-slate-600 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Metode Standar</span>
+                  <span className="text-slate-400">Standard Method</span>
                   <span className="font-semibold text-slate-800 bg-white border border-slate-100 rounded-sm px-1.5 py-0.5 max-w-[150px] truncate" title={srv.method}>{srv.method}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Durasi Pengerjaan (TAT)</span>
+                  <span className="text-slate-400">Turnaround Time (TAT)</span>
                   <span className="font-semibold text-slate-800 flex items-center gap-1">
                     <Clock className="w-3 h-3 text-slate-400" />
-                    {srv.tatDays} Hari Kerja
+                    {srv.tatDays} Working Days
                   </span>
                 </div>
               </div>
@@ -266,7 +264,7 @@ export default function ServiceCatalog({
 
             <div className="pt-4 border-t border-slate-100/80 flex items-center justify-between gap-2">
               <div className="text-left font-mono">
-                <span className="text-[9px] block text-slate-400 font-sans uppercase">Biaya Dasar</span>
+                <span className="text-[9px] block text-slate-400 font-sans uppercase">Base Price</span>
                 <span className="font-bold text-slate-900 text-sm">{formatIDR(srv.price)}</span>
               </div>
 
@@ -274,25 +272,25 @@ export default function ServiceCatalog({
                 <button
                   onClick={() => setViewingDetailService(srv)}
                   className="p-1.8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-                  title="Lihat Detail Uji"
+                  title="View Test Details"
                 >
                   <FileText className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleEditClick(srv)}
                   className="p-1.8 text-slate-500 hover:text-teal-600 hover:bg-slate-100 rounded-md transition-colors"
-                  title="Edit Layanan"
+                  title="Edit Service"
                 >
                   <Edit2 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm(`Apakah Anda yakin ingin menghapus katalog ${srv.serviceCode}?`)) {
+                    if (confirm(`Are you sure you want to delete catalog item ${srv.serviceCode}?`)) {
                       onDeleteService(srv.id);
                     }
                   }}
                   className="p-1.8 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-md transition-colors"
-                  title="Hapus Katalog"
+                  title="Delete Catalog Item"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -307,46 +305,46 @@ export default function ServiceCatalog({
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-fade-in my-8">
             <div className="bg-teal-700 text-white p-5">
-              <h3 className="font-bold text-lg">Input Layanan Pengujian Baru</h3>
-              <p className="text-xs text-teal-150">Tambahkan daftar parameter uji baru ke dalam etalase penjualan</p>
+              <h3 className="font-bold text-lg">Add New Testing Service</h3>
+              <p className="text-xs text-teal-150">Add new testing parameter to the service catalog</p>
             </div>
 
             <form onSubmit={handleSubmitAdd} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Kode Layanan</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Service Code</label>
                   <input
                     type="text"
                     value={formData.serviceCode}
                     onChange={(e) => setFormData({ ...formData, serviceCode: e.target.value.toUpperCase() })}
                     className="w-full p-2 border border-slate-200 rounded-lg text-xs font-mono font-bold"
-                    placeholder="Contoh: CHEM-021"
+                    placeholder="e.g., CHEM-021"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Kategori Analisis</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Analysis Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full p-2 border border-slate-200 rounded-lg text-xs"
                   >
-                    <option value="Kimia Anorganik">Kimia Anorganik</option>
-                    <option value="Pangan & Nutrisi">Pangan & Nutrisi</option>
-                    <option value="Lingkungan">Lingkungan</option>
-                    <option value="Kimia Organik">Kimia Organik</option>
-                    <option value="Agrokontrol">Agrokontrol</option>
-                    <option value="Mikrobiologi">Mikrobiologi</option>
+                    <option value="Inorganic Chemistry">Inorganic Chemistry</option>
+                    <option value="Food & Nutrition">Food & Nutrition</option>
+                    <option value="Environment">Environment</option>
+                    <option value="Organic Chemistry">Organic Chemistry</option>
+                    <option value="Agro-control">Agro-control</option>
+                    <option value="Microbiology">Microbiology</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Parameter Analisis</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Analysis Parameter Name</label>
                 <input
                   type="text"
-                  placeholder="Misal: Uji Kadar Formalin & Pengawet Buatan"
+                  placeholder="e.g., Formalin Content & Artificial Preservatives Test"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs"
@@ -355,10 +353,10 @@ export default function ServiceCatalog({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Metode Standard Pengujian</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Standard Testing Method</label>
                 <input
                   type="text"
-                  placeholder="ICP-OES / AOAC / Standard SNI..."
+                  placeholder="ICP-OES / AOAC / ISO Standard..."
                   value={formData.method}
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs"
@@ -368,7 +366,7 @@ export default function ServiceCatalog({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Turnaround Time (HARI)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Turnaround Time (DAYS)</label>
                   <input
                     type="number"
                     min="1"
@@ -380,7 +378,7 @@ export default function ServiceCatalog({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Harga Satuan (Rp)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Unit Price (IDR)</label>
                   <input
                     type="number"
                     min="50000"
@@ -393,9 +391,9 @@ export default function ServiceCatalog({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Deskripsi & Spek Akreditasi</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Description & Accreditation Specs</label>
                 <textarea
-                  placeholder="Alat instrumentasi GC-MS, jenis wadah pengiriman sampel..."
+                  placeholder="GC-MS instrumentation, sample container requirements..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs h-18"
@@ -408,13 +406,13 @@ export default function ServiceCatalog({
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button 
                   type="submit"
                   className="px-5 py-2 bg-teal-600 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs hover:bg-teal-700"
                 >
-                  Simpan Layanan
+                  Save Service
                 </button>
               </div>
             </form>
@@ -428,31 +426,31 @@ export default function ServiceCatalog({
           <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-fade-in my-8">
             <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg">Edit Layanan {editingService.serviceCode}</h3>
-                <p className="text-xs text-slate-300">Modifikasi harga dasar, jenis instrumen uji, dan akreditasi standardisasi</p>
+                <h3 className="font-bold text-lg">Edit Service {editingService.serviceCode}</h3>
+                <p className="text-xs text-slate-300">Modify base price, testing instrument, and standardization accreditation</p>
               </div>
               <button onClick={() => setEditingService(null)} className="text-slate-300 hover:text-white text-xl font-bold cursor-pointer">&times;</button>
             </div>
 
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Kategori Analisis</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Analysis Category</label>
                 <select
                   value={editFormData.category || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs"
                 >
-                  <option value="Kimia Anorganik">Kimia Anorganik</option>
-                  <option value="Pangan & Nutrisi">Pangan & Nutrisi</option>
-                  <option value="Lingkungan">Lingkungan</option>
-                  <option value="Kimia Organik">Kimia Organik</option>
-                  <option value="Agrokontrol">Agrokontrol</option>
-                  <option value="Mikrobiologi">Mikrobiologi</option>
+                  <option value="Inorganic Chemistry">Inorganic Chemistry</option>
+                  <option value="Food & Nutrition">Food & Nutrition</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Organic Chemistry">Organic Chemistry</option>
+                  <option value="Agro-control">Agro-control</option>
+                  <option value="Microbiology">Microbiology</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Parameter Analisis</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Analysis Parameter Name</label>
                 <input
                   type="text"
                   value={editFormData.name || ''}
@@ -463,7 +461,7 @@ export default function ServiceCatalog({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Metode Standard Pengujian</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Standard Testing Method</label>
                 <input
                   type="text"
                   value={editFormData.method || ''}
@@ -475,7 +473,7 @@ export default function ServiceCatalog({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Turnaround Time (HARI)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Turnaround Time (DAYS)</label>
                   <input
                     type="number"
                     min="1"
@@ -486,7 +484,7 @@ export default function ServiceCatalog({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Harga Satuan (Rp)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Unit Price (IDR)</label>
                   <input
                     type="number"
                     min="1"
@@ -498,7 +496,7 @@ export default function ServiceCatalog({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Deskripsi Detil Wadah & Alat</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Detailed Container & Equipment Description</label>
                 <textarea
                   value={editFormData.description || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
@@ -512,13 +510,13 @@ export default function ServiceCatalog({
                   onClick={() => setEditingService(null)}
                   className="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button 
                   type="submit"
                   className="px-5 py-2 bg-teal-600 hover:bg-teal-750 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs"
                 >
-                  Simpan Perubahan
+                  Save Changes
                 </button>
               </div>
             </form>
@@ -533,34 +531,34 @@ export default function ServiceCatalog({
             <div className="bg-teal-900 text-white p-6">
               <span className="text-[9px] font-mono tracking-widest bg-teal-800 px-2 py-0.5 rounded-full uppercase">{viewingDetailService.category}</span>
               <h3 className="text-xl font-bold mt-2">{viewingDetailService.name}</h3>
-              <p className="text-xs text-teal-200 mt-1">ID Kode: {viewingDetailService.serviceCode}</p>
+              <p className="text-xs text-teal-200 mt-1">Service Code: {viewingDetailService.serviceCode}</p>
             </div>
             
             <div className="p-6 space-y-4">
               <div className="text-xs space-y-3">
                 <div>
-                  <span className="text-slate-400 block font-semibold uppercase">Informasi Singkat</span>
-                  <p className="text-slate-700 leading-relaxed mt-1 text-xs">{viewingDetailService.description || 'Tidak ada deskripsi spesifik.'}</p>
+                  <span className="text-slate-400 block font-semibold uppercase">Overview & Specifications</span>
+                  <p className="text-slate-700 leading-relaxed mt-1 text-xs">{viewingDetailService.description || 'No specific description provided.'}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
                   <div>
-                    <span className="text-slate-400">Metode Standar</span>
+                    <span className="text-slate-400">Standard Method</span>
                     <p className="font-semibold text-slate-800 mt-0.5">{viewingDetailService.method}</p>
                   </div>
                   <div>
                     <span className="text-slate-400">Turnaround Time</span>
-                    <p className="font-semibold text-teal-700 mt-0.5">{viewingDetailService.tatDays} Hari Kerja</p>
+                    <p className="font-semibold text-teal-700 mt-0.5">{viewingDetailService.tatDays} Working Days</p>
                   </div>
                 </div>
 
                 <div className="bg-teal-50/20 p-3.5 rounded-xl border border-teal-500/10 grid grid-cols-2 gap-2 items-center">
                   <div>
-                    <span className="text-[10px] text-teal-850 uppercase font-bold tracking-wider">Harga Dasar</span>
+                    <span className="text-[10px] text-teal-850 uppercase font-bold tracking-wider">Base Price</span>
                     <p className="text-lg font-mono font-bold text-teal-900 mt-0.5">{formatIDR(viewingDetailService.price)}</p>
                   </div>
                   <div className="text-[10px] text-teal-700 font-medium">
-                    * Berlaku kelipatan per kuantiti sampel di Ongoing Services. Included akreditasi komite KAN/ISO.
+                    * Multiplies per sample quantity in Ongoing Services. Includes ISO/KAN accreditation standards.
                   </div>
                 </div>
               </div>
@@ -571,7 +569,7 @@ export default function ServiceCatalog({
                 onClick={() => setViewingDetailService(null)}
                 className="px-4 py-2 text-xs font-semibold text-slate-705 hover:bg-slate-200 bg-slate-150 rounded-lg transition-colors cursor-pointer"
               >
-                Tutup Detail
+                Close Details
               </button>
             </div>
           </div>

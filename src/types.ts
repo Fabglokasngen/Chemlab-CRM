@@ -1,3 +1,17 @@
+export type UserRole = 'Administrator' | 'Manager Sales' | 'Sales Executive' | 'Laboratorium Tech';
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  role: UserRole;
+  department?: string;
+  phoneNumber?: string;
+  lastLoginAt?: string;
+  createdAt?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -13,6 +27,8 @@ export interface Service {
   method: string;
   tatDays: number;
   price: number; // in IDR (Rp)
+  userId?: string;
+  ownerEmail?: string;
 }
 
 export type ClientStatus = 'Prospect' | 'Contacted' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost';
@@ -47,6 +63,8 @@ export interface Client {
   isFirstTransaction: boolean; // True for first transaction, triggers incentive calculation
   activityNotes: ActivityNote[];
   createdAt: string;
+  userId?: string;
+  ownerEmail?: string;
 }
 
 export type ProjectStatus = 
@@ -81,6 +99,8 @@ export interface Project {
   idElsa?: string; // 6-digit ELSA reference number
   discountPercent?: number; // 0-100% discount
   urgency?: UrgencyLevel; // Regular, Urgent, Super Urgent
+  userId?: string;
+  ownerEmail?: string;
 }
 
 export interface Incentive {
@@ -94,6 +114,8 @@ export interface Incentive {
   paymentStatus: PaymentStatus;
   isPaid: boolean; // Paid to sales
   createdAt: string;
+  userId?: string;
+  ownerEmail?: string;
 }
 
 export interface SalesEmployee {

@@ -1,17 +1,17 @@
 import React from 'react';
 import { 
-  AreaChart, Area, 
+  AreaChart, Area, LineChart, Line, ComposedChart,
   BarChart, Bar, 
-  LineChart, Line,
   PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 import { 
   Users, RefreshCw, Milestone, 
   Coins, Wallet, TrendingUp, TrendingDown,
-  Building2, Award, ClipboardCheck
+  Building2, Award, ClipboardCheck, FileText, Download, Clock, Activity, FlaskConical
 } from 'lucide-react';
 import { Client, Project, Service } from '../types';
+import { generateDashboardPDFReport } from '../utils/pdfGenerator';
 
 interface DashboardProps {
   clients: Client[];
@@ -39,22 +39,19 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
   if (newClientsLastMonth > 0) {
     clientGrowthPercent = Math.round(((newClientsThisMonth - newClientsLastMonth) / newClientsLastMonth) * 100);
   } else if (newClientsThisMonth > 0) {
-    clientGrowthPercent = 100; // infinite from 0
+    clientGrowthPercent = 100;
   }
 
-  // Repeat Rate = (Jumlah Customer Repeat / Total Customer) * 100%
-  // A repeat customer is a customer with isFirstTransaction === false
+  // Repeat Rate = (Repeat Customers / Total Active Customers) * 100%
   const repeatCustomers = clients.filter(c => !c.isFirstTransaction && c.status === 'Won').length;
   const repeatRate = totalActive > 0 ? Math.round((repeatCustomers / totalActive) * 100) : 0;
 
   // Conversion Rate = (Won Opportunities / Total Opportunities) * 100%
-  // Total opportunities are all clients in sales pipeline (Won, Lost, Negotiation, Proposal Sent, Contacted, Prospect)
   const totalLeads = clients.length;
   const wonLeads = clients.filter(c => c.status === 'Won').length;
   const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
 
-  // Unrealized Revenue = Total nilai quotation belum closing + potential revenues from prospects/negotiations
-  // Let's sum up projects with unpaid status or status not completed, plus clients with potential revenue that aren't Won/Lost yet
+  // Unrealized Revenue = Total valuation of open negotiations + unbilled active lab progress
   const openLeadsPotential = clients
     .filter(c => c.status !== 'Won' && c.status !== 'Lost')
     .reduce((sum, c) => sum + (c.potentialRevenue || 0), 0);
@@ -66,17 +63,15 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
   const totalUnrealizedRevenue = openLeadsPotential + pendingProjectsRevenue;
 
   // Revenue
-  // Current month revenue (completed or released services with paid or unpaid status, let's include completed service items)
   const currentMonthRevenue = projects
     .filter(p => (p.status === 'Completed' || p.status === 'Report Released'))
     .reduce((sum, p) => sum + p.totalPrice, 0);
 
-  // Yearly estimation
-  const totalRevenueYear = currentMonthRevenue + 45000000; // adding baseline mock past history
+  const totalRevenueYear = currentMonthRevenue + 45000000;
 
-  // --- CRM & PIPELINE METRICS (USER REQUESTED) ---
+  // --- CRM & PIPELINE METRICS ---
   const totalContacts = clients.filter(c => c.picName).length;
-  const totalCompanies = clients.length; // Each client registered represents a company / institution
+  const totalCompanies = clients.length;
   const openDeals = clients.filter(c => c.status !== 'Won' && c.status !== 'Lost').length;
   const pipelineValue = clients
     .filter(c => c.status !== 'Won' && c.status !== 'Lost')
@@ -86,9 +81,9 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
     .filter(p => p.status === 'Completed' || p.status === 'Report Released')
     .reduce((sum, p) => sum + p.totalPrice, 0) + 45000000;
 
-  // Format currency helper
+  // Format currency helper (IDR)
   const formatIDR = (num: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR',
       maximumFractionDigits: 0
@@ -99,12 +94,12 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
 
   // 1. Customer Growth Trend (Monthly chart)
   const customerGrowthData = [
-    { month: 'Jan', Total: 2, Baru: 1 },
-    { month: 'Feb', Total: 3, Baru: 1 },
-    { month: 'Mar', Total: 3, Baru: 0 },
-    { month: 'Apr', Total: 5, Baru: 2 },
-    { month: 'May', Total: 8, Baru: 3 },
-    { month: 'Jun', Total: totalClients, Baru: newClientsThisMonth },
+    { month: 'Jan', Total: 2, New: 1 },
+    { month: 'Feb', Total: 3, New: 1 },
+    { month: 'Mar', Total: 3, New: 0 },
+    { month: 'Apr', Total: 5, New: 2 },
+    { month: 'May', Total: 8, New: 3 },
+    { month: 'Jun', Total: totalClients, New: newClientsThisMonth },
   ];
 
   // 2. Revenue Trend
@@ -118,17 +113,15 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
   ];
 
   // 3. Service Category Distribution
-  // Count projects or services grouped by category
   const categoryCounts: { [key: string]: number } = {};
   projects.forEach(p => {
     categoryCounts[p.serviceCategory] = (categoryCounts[p.serviceCategory] || 0) + 1;
   });
   
-  // if empty, add default visual
   if (Object.keys(categoryCounts).length === 0) {
-    categoryCounts['Kimia Anorganik'] = 2;
-    categoryCounts['Pangan & Nutrisi'] = 1;
-    categoryCounts['Lingkungan'] = 1;
+    categoryCounts['Inorganic Chemistry'] = 2;
+    categoryCounts['Food & Nutrition'] = 1;
+    categoryCounts['Environment'] = 1;
   }
 
   const COLORS = ['#0f766e', '#0284c7', '#4f46e5', '#f59e0b', '#ec4899', '#8b5cf6'];
@@ -137,13 +130,12 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
     value: categoryCounts[cat]
   }));
 
-  // 4. Top Customers (Group project prices by client name)
+  // 4. Top Customers
   const clientRevenues: { [key: string]: number } = {};
   projects.forEach(p => {
     clientRevenues[p.clientName] = (clientRevenues[p.clientName] || 0) + p.totalPrice;
   });
   
-  // ensure lead records with potential revenue also have space
   clients.filter(c => c.status === 'Won').forEach(c => {
     if (!clientRevenues[c.companyName]) {
       clientRevenues[c.companyName] = c.potentialRevenue * 0.5 || 5000000;
@@ -155,47 +147,55 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
     .sort((a, b) => b.Revenue - a.Revenue)
     .slice(0, 5);
 
-  // 5. Sales Performance (grouped by sales agent)
-  // Sales agents: Budi Santoso, Siti Rahma, Andi Wijaya
-  const salesPerformanceMap: { [key: string]: { newClients: number, totalContract: number, wonCount: number, totalLeads: number } } = {
-    'Budi Santoso': { newClients: 2, totalContract: 13500000, wonCount: 2, totalLeads: 3 },
-    'Siti Rahma': { newClients: 3, totalContract: 23400000, wonCount: 2, totalLeads: 4 },
-    'Andi Wijaya': { newClients: 1, totalContract: 0, wonCount: 0, totalLeads: 2 },
-  };
+  // 5. TESTING SERVICES DEMAND & TURNAROUND PERFORMANCE (Replaced Sales Employee Performance)
+  const serviceDemandMap: { 
+    [key: string]: { 
+      code: string;
+      name: string; 
+      category: string; 
+      activeSamples: number; 
+      tatDays: number; 
+      totalRevenue: number;
+      completedCount: number;
+    } 
+  } = {};
 
-  // Dynamically aggregate from live data state
-  clients.forEach(c => {
-    const s = c.assignedSales || 'Lainnya';
-    if (!salesPerformanceMap[s]) {
-      salesPerformanceMap[s] = { newClients: 0, totalContract: 0, wonCount: 0, totalLeads: 0 };
-    }
-    salesPerformanceMap[s].totalLeads += 1;
-    if (c.status === 'Won') {
-      salesPerformanceMap[s].wonCount += 1;
-    }
-    if (c.createdAt.startsWith(currentMonth)) {
-      salesPerformanceMap[s].newClients += 1;
-    }
-  });
-
-  projects.forEach(p => {
-    const s = p.assignedSales || 'Lainnya';
-    if (!salesPerformanceMap[s]) {
-      salesPerformanceMap[s] = { newClients: 0, totalContract: 0, wonCount: 0, totalLeads: 0 };
-    }
-    salesPerformanceMap[s].totalContract += p.totalPrice;
-  });
-
-  const salesPerformanceData = Object.keys(salesPerformanceMap).map(agent => {
-    const data = salesPerformanceMap[agent];
-    const rate = data.totalLeads > 0 ? Math.round((data.wonCount / data.totalLeads) * 100) : 0;
-    return {
-      name: agent,
-      'Pelanggan Baru': data.newClients,
-      'Nilai Kontrak': data.totalContract,
-      'Conversion Rate (%)': rate
+  // Populate from available services
+  services.forEach(s => {
+    serviceDemandMap[s.id] = {
+      code: s.serviceCode,
+      name: s.name,
+      category: s.category,
+      activeSamples: 0,
+      tatDays: s.tatDays,
+      totalRevenue: 0,
+      completedCount: 0
     };
   });
+
+  // Aggregate stats from active projects
+  projects.forEach(p => {
+    if (!serviceDemandMap[p.serviceId]) {
+      serviceDemandMap[p.serviceId] = {
+        code: 'SERV-GEN',
+        name: p.serviceName,
+        category: p.serviceCategory,
+        activeSamples: 0,
+        tatDays: 7,
+        totalRevenue: 0,
+        completedCount: 0
+      };
+    }
+    serviceDemandMap[p.serviceId].activeSamples += p.sampleQuantity;
+    serviceDemandMap[p.serviceId].totalRevenue += p.totalPrice;
+    if (p.status === 'Completed' || p.status === 'Report Released') {
+      serviceDemandMap[p.serviceId].completedCount += 1;
+    }
+  });
+
+  const testingServicesPerformanceData = Object.values(serviceDemandMap)
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+    .slice(0, 5);
 
   // 6. Service Status Summary
   const statusCounts = {
@@ -216,8 +216,31 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
 
   const serviceStatusData = Object.keys(statusCounts).map(status => ({
     name: status,
-    Jumlah: statusCounts[status as keyof typeof statusCounts]
+    Count: statusCounts[status as keyof typeof statusCounts]
   }));
+
+  // PDF Export Handler for Dashboard KPI
+  const handleDownloadPDF = () => {
+    generateDashboardPDFReport({
+      totalContacts,
+      totalCompanies,
+      openDeals,
+      pipelineValue,
+      wonValueYtd,
+      wonDealsCount,
+      totalActive,
+      clientGrowthPercent,
+      newClientsThisMonth,
+      repeatRate,
+      conversionRate,
+      totalUnrealizedRevenue,
+      currentMonthRevenue,
+      totalRevenueYear,
+      topCustomersData,
+      categoryData,
+      testingServicesData: testingServicesPerformanceData
+    });
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -225,22 +248,32 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
       <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Executive Lab Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Real-time business trends, testing progress metrics, and sales incentives metrics.</p>
+          <p className="text-sm text-slate-500 mt-1">Real-time laboratory testing analytics, pipeline metrics, and turnaround performance.</p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-100 self-start md:self-center">
-          <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
-          LAB WORKSPACE SECURE & OPEN ACCESS
+        <div className="flex flex-wrap items-center gap-2 self-start md:self-center">
+          <button
+            id="btn-download-dashboard-pdf"
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-xl transition-all shadow-xs cursor-pointer"
+          >
+            <FileText className="h-4 w-4 text-teal-200" />
+            <span>Download PDF KPI</span>
+          </button>
+          <div className="flex items-center gap-2 text-xs font-mono bg-slate-50 text-slate-600 px-3 py-2 rounded-xl border border-slate-100">
+            <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
+            LAB WORKSPACE SECURE
+          </div>
         </div>
       </div>
 
-      {/* CRM & SALES PIPELINE METRICS PANEL (USER REQUESTED) */}
+      {/* CRM & SALES PIPELINE METRICS PANEL */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse"></span>
-            CRM &amp; Sales Pipeline Summary
+            CRM &amp; Pipeline Overview
           </h2>
-          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">YTD Penjualan</span>
+          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">YTD Business</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Total Contacts */}
@@ -253,7 +286,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
             </div>
             <div className="mt-1">
               <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{totalContacts}</h3>
-              <p className="text-[10px] text-slate-400 mt-1">Narahubung PIC aktif lab</p>
+              <p className="text-[10px] text-slate-400 mt-1">Active lab client PIC contacts</p>
             </div>
           </div>
 
@@ -267,7 +300,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
             </div>
             <div className="mt-1">
               <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{totalCompanies}</h3>
-              <p className="text-[10px] text-slate-400 mt-1">Perusahaan/PT terdaftar</p>
+              <p className="text-[10px] text-slate-400 mt-1">Registered enterprise accounts</p>
             </div>
           </div>
 
@@ -281,35 +314,35 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
             </div>
             <div className="mt-1">
               <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{openDeals}</h3>
-              <p className="text-[10px] text-slate-400 mt-1">Prospek &amp; Negosiasi aktif</p>
+              <p className="text-[10px] text-slate-400 mt-1">Active prospects &amp; proposals</p>
             </div>
           </div>
 
           {/* Pipeline Value */}
           <div id="crm-pipeline-value" className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all duration-250">
             <div className="flex items-center justify-between pb-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pipeline Value</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pipeline Valuation</span>
               <div className="p-2 bg-rose-50/60 text-rose-600 rounded-xl">
                 <Wallet className="h-4.5 w-4.5" />
               </div>
             </div>
             <div className="mt-1">
               <h3 className="text-lg font-bold text-slate-900 truncate tracking-tight">{formatIDR(pipelineValue)}</h3>
-              <p className="text-[10px] text-slate-400 mt-1">Nilai estimasi negosiasi</p>
+              <p className="text-[10px] text-slate-400 mt-1">Active negotiation estimates</p>
             </div>
           </div>
 
           {/* Won YTD */}
           <div id="crm-won-ytd" className="bg-white p-5 rounded-2xl border border-teal-500/20 shadow-xs hover:shadow-md transition-all duration-250 bg-gradient-to-br from-white to-teal-50/10">
             <div className="flex items-center justify-between pb-2">
-              <span className="text-[11px] font-bold text-teal-800 uppercase tracking-wider">Won (YTD)</span>
+              <span className="text-[11px] font-bold text-teal-800 uppercase tracking-wider">Won Deals (YTD)</span>
               <div className="p-2 bg-teal-600 text-white rounded-xl shadow-xs">
                 <Coins className="h-4.5 w-4.5" />
               </div>
             </div>
             <div className="mt-1">
               <h3 className="text-lg font-bold text-teal-900 truncate tracking-tight">{formatIDR(wonValueYtd)}</h3>
-              <p className="text-[10px] text-teal-600 font-medium mt-1">Success: {wonDealsCount} Closing</p>
+              <p className="text-[10px] text-teal-600 font-medium mt-1">Closed Deals: {wonDealsCount}</p>
             </div>
           </div>
         </div>
@@ -322,13 +355,13 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         {/* KPI 1: Customer Growth */}
         <div id="kpi-customer-growth" className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer Growth</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Client Growth</span>
             <div className="p-2 bg-teal-50 text-teal-600 rounded-xl">
               <Users className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-2">
-            <h3 className="text-2xl font-bold text-slate-900">{totalActive} <span className="text-xs font-medium text-slate-400">Aktif</span></h3>
+            <h3 className="text-2xl font-bold text-slate-900">{totalActive} <span className="text-xs font-medium text-slate-400">Active</span></h3>
             <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
               {clientGrowthPercent >= 0 ? (
                 <span className="text-emerald-600 font-semibold flex items-center">
@@ -339,7 +372,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                   <TrendingDown className="h-3 w-3 mr-0.5" /> {clientGrowthPercent}%
                 </span>
               )}
-              vs bulan lalu (+{newClientsThisMonth} baru)
+              vs last month (+{newClientsThisMonth} new)
             </p>
           </div>
         </div>
@@ -347,7 +380,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         {/* KPI 2: Repeat Rate */}
         <div id="kpi-repeat-rate" className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Repeat Rate</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Repeat Client Rate</span>
             <div className="p-2 bg-sky-50 text-sky-600 rounded-xl">
               <RefreshCw className="h-5 w-5" />
             </div>
@@ -355,7 +388,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
           <div className="mt-2">
             <h3 className="text-2xl font-bold text-slate-900">{repeatRate}%</h3>
             <p className="text-xs text-slate-500 mt-2">
-              <span className="font-semibold text-slate-700">{repeatCustomers} dari {totalActive}</span> customer adalah konsumen loyal (repeat order)
+              <span className="font-semibold text-slate-700">{repeatCustomers} of {totalActive}</span> clients placed repeat orders
             </p>
           </div>
         </div>
@@ -371,7 +404,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
           <div className="mt-2">
             <h3 className="text-2xl font-bold text-slate-900">{conversionRate}%</h3>
             <p className="text-xs text-slate-500 mt-2">
-              <span className="font-semibold text-slate-700">{wonLeads} won</span> dari {totalLeads} total records kesepakatan sales
+              <span className="font-semibold text-slate-700">{wonLeads} won</span> out of {totalLeads} total lead entries
             </p>
           </div>
         </div>
@@ -379,7 +412,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         {/* KPI 4: Unrealized Revenue */}
         <div id="kpi-unrealized-revenue" className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-shadow col-span-1">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unrealized Revenue</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unrealized Pipeline</span>
             <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
               <Wallet className="h-5 w-5" />
             </div>
@@ -387,7 +420,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
           <div className="mt-2">
             <h3 className="text-lg font-bold text-slate-900 truncate">{formatIDR(totalUnrealizedRevenue)}</h3>
             <p className="text-xs text-slate-500 mt-2">
-              Peluang negosiasi & progres lab berjalan yang belum tertagih
+              Pending proposals &amp; ongoing testing billing
             </p>
           </div>
         </div>
@@ -395,7 +428,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         {/* KPI 5: Revenue */}
         <div id="kpi-revenue" className="bg-white p-5 rounded-2xl border border-teal-500/20 shadow-xs hover:shadow-md transition-shadow bg-gradient-to-br from-white to-teal-50/10">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-semibold text-teal-800 uppercase tracking-wider">Revenue Bulan Ini</span>
+            <span className="text-xs font-semibold text-teal-800 uppercase tracking-wider">Monthly Revenue</span>
             <div className="p-2 bg-teal-600 text-white rounded-xl shadow-xs">
               <Coins className="h-5 w-5" />
             </div>
@@ -403,7 +436,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
           <div className="mt-2">
             <h3 className="text-lg font-bold text-teal-900 truncate">{formatIDR(currentMonthRevenue)}</h3>
             <p className="text-xs text-slate-500 mt-2">
-              Est. Tahunan: <span className="font-semibold text-slate-700">{formatIDR(totalRevenueYear)}</span>
+              Annual Est.: <span className="font-semibold text-slate-700">{formatIDR(totalRevenueYear)}</span>
             </p>
           </div>
         </div>
@@ -416,16 +449,16 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs lg:col-span-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="font-bold text-slate-900">Revenue & Target Monthly Trend</h3>
-              <p className="text-xs text-slate-400">Membandingkan realisasi billing lab selesai dengan target target penjualan bulanan</p>
+              <h3 className="font-bold text-slate-900">Revenue &amp; Target Monthly Trend</h3>
+              <p className="text-xs text-slate-400">Comparing realized completed lab billing against monthly target projections</p>
             </div>
-            <div className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md font-semibold">
-              Realisasi Rp 13.5M
+            <div className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-semibold">
+              Realized: {formatIDR(currentMonthRevenue)}
             </div>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <ComposedChart data={revenueTrendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0f766e" stopOpacity={0.2}/>
@@ -434,15 +467,15 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(val) => `Rp ${val / 1000000}jt`} />
+                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(val) => `${val / 1000000}M`} />
                 <Tooltip 
-                  formatter={(value: any) => [formatIDR(value), "Nilai"]}
+                  formatter={(value: any) => [formatIDR(value), "Amount"]}
                   contentStyle={{ background: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }}
                 />
                 <Legend iconSize={10} verticalAlign="top" height={36} />
-                <Area type="monotone" dataKey="Revenue" stroke="#0f766e" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name="Billing Realisasi" />
-                <Line type="monotone" dataKey="Target" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" dot={false} name="Target Sales" />
-              </AreaChart>
+                <Area type="monotone" dataKey="Revenue" stroke="#0f766e" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name="Realized Billing" />
+                <Line type="monotone" dataKey="Target" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" dot={false} name="Revenue Target" />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -451,7 +484,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs lg:col-span-4 flex flex-col justify-between">
           <div>
             <h3 className="font-bold text-slate-900">Service Category Distribution</h3>
-            <p className="text-xs text-slate-400 mb-6 font-sans">Kategori pengujian terbesar berdasarkan volume sampel</p>
+            <p className="text-xs text-slate-400 mb-6 font-sans">Testing categories share by sample order volume</p>
           </div>
           <div className="h-48 flex justify-center items-center relative">
             <ResponsiveContainer width="100%" height="100%">
@@ -474,7 +507,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
             </ResponsiveContainer>
             <div className="absolute text-center pointer-events-none">
               <span className="text-3xl font-bold text-slate-800">{projects.length}</span>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Layanan Total</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Total Projects</p>
             </div>
           </div>
           <div className="space-y-1.5 mt-4">
@@ -484,7 +517,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
                   <span className="text-slate-600 font-medium truncate max-w-[140px]">{item.name}</span>
                 </div>
-                <span className="text-slate-900 font-semibold font-mono">{item.value} order</span>
+                <span className="text-slate-900 font-semibold font-mono">{item.value} orders</span>
               </div>
             ))}
           </div>
@@ -497,7 +530,7 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
         {/* Customer growth line chart */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs lg:col-span-6">
           <h3 className="font-bold text-slate-900 mb-1">Customer Acquisition Growth Trend</h3>
-          <p className="text-xs text-slate-400 mb-6">Pertumbuhan database perusahaan mendaftar & customer mendaftar per bulan</p>
+          <p className="text-xs text-slate-400 mb-6">Monthly growth of registered enterprise accounts &amp; new client conversions</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={customerGrowthData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
@@ -506,8 +539,8 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }} />
                 <Legend iconSize={10} verticalAlign="top" height={36} />
-                <Bar dataKey="Total" fill="#4f46e5" radius={[4, 4, 0, 0]} name="Total Pelanggan" />
-                <Bar dataKey="Baru" fill="#06b6d4" radius={[4, 4, 0, 0]} name="Perolehan Baru" />
+                <Bar dataKey="Total" fill="#4f46e5" radius={[4, 4, 0, 0]} name="Total Clients" />
+                <Bar dataKey="New" fill="#06b6d4" radius={[4, 4, 0, 0]} name="New Acquisitions" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -515,8 +548,8 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
 
         {/* Service status summary */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs lg:col-span-6">
-          <h3 className="font-bold text-slate-900 mb-1">Laboratory Testing Pipeline Summary</h3>
-          <p className="text-xs text-slate-400 mb-6 font-sans">Distribusi load antrean sampel pengujian yang sedang berjalan di lab</p>
+          <h3 className="font-bold text-slate-900 mb-1">Laboratory Testing Pipeline Stages</h3>
+          <p className="text-xs text-slate-400 mb-6 font-sans">Active sample workload distribution across analysis lifecycle stages</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={serviceStatusData} layout="vertical" margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
@@ -524,22 +557,22 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                 <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <YAxis type="category" dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }} />
-                <Bar dataKey="Jumlah" fill="#0f766e" radius={[0, 4, 4, 0]} name="Beban Pekerjaan" />
+                <Bar dataKey="Count" fill="#0f766e" radius={[0, 4, 4, 0]} name="Sample Workload" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* TOP CLIENTS AND SALES PERFORMANCE GRID */}
+      {/* TOP CLIENTS AND TESTING SERVICES PERFORMANCE GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Top 5 Customers List */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-bold text-slate-900">Top 5 Pelanggan Terbesar</h3>
-              <p className="text-xs text-slate-400">Kontribusi nilai transaksi tertinggi dalam portofolio laboratorium</p>
+              <h3 className="font-bold text-slate-900">Top 5 Enterprise Clients</h3>
+              <p className="text-xs text-slate-400">Highest transaction value contributions in laboratory portfolio</p>
             </div>
             <Building2 className="text-slate-400 h-5 w-5" />
           </div>
@@ -552,47 +585,54 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">{cust.name}</h4>
-                    <p className="text-xs text-slate-400">Peringkat loyalitas ke-{i + 1}</p>
+                    <p className="text-xs text-slate-400">Tier {i + 1} Account</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="font-mono text-sm font-bold text-teal-800">{formatIDR(cust.Revenue)}</span>
-                  <p className="text-[10px] text-emerald-600 font-semibold font-sans">Premium Client</p>
+                  <p className="text-[10px] text-emerald-600 font-semibold font-sans">Key Client</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Sales performance table */}
+        {/* TESTING SERVICES DEMAND & TURNAROUND PERFORMANCE (Replaced Sales Employees Table) */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-bold text-slate-900">Performa Sales Karyawan</h3>
-              <p className="text-xs text-slate-400">Metrik kepemilikan lead, perolehan klien baru, dan volume kontrak</p>
+              <h3 className="font-bold text-slate-900">Testing Services Demand &amp; Turnaround</h3>
+              <p className="text-xs text-slate-400">Sample volume, standard SLA turnaround time, and revenue per service</p>
             </div>
-            <Award className="text-slate-400 h-5 w-5" />
+            <FlaskConical className="text-teal-600 h-5 w-5" />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider font-semibold">
                 <tr>
-                  <th className="p-3 rounded-l-md">Nama Sales</th>
-                  <th className="p-3 text-center">Nasabah Baru</th>
-                  <th className="p-3 text-right">Nilai Kontrak</th>
-                  <th className="p-3 text-right rounded-r-md">Conversion</th>
+                  <th className="p-3 rounded-l-md">Parameter / Service</th>
+                  <th className="p-3 text-center">Active Samples</th>
+                  <th className="p-3 text-center">SLA (Days)</th>
+                  <th className="p-3 text-right rounded-r-md">Total Billing</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-150">
-                {salesPerformanceData.map((item) => (
+                {testingServicesPerformanceData.map((item) => (
                   <tr key={item.name} className="hover:bg-slate-50/50">
-                    <td className="p-3 font-semibold text-slate-800">{item.name}</td>
-                    <td className="p-3 text-center text-slate-600 font-mono">{item['Pelanggan Baru']}</td>
-                    <td className="p-3 text-right font-mono text-slate-900 font-semibold">{formatIDR(item['Nilai Kontrak'])}</td>
-                    <td className="p-3 text-right font-mono">
-                      <span className="bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full text-xs font-semibold">
-                        {item['Conversion Rate (%)']}%
+                    <td className="p-3 font-semibold text-slate-800">
+                      <div className="line-clamp-1 text-xs">{item.name}</div>
+                      <span className="text-[10px] text-slate-400 font-mono">{item.code} • {item.category}</span>
+                    </td>
+                    <td className="p-3 text-center text-slate-600 font-mono font-semibold">
+                      {item.activeSamples}
+                    </td>
+                    <td className="p-3 text-center font-mono">
+                      <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-xs font-semibold">
+                        {item.tatDays} days
                       </span>
+                    </td>
+                    <td className="p-3 text-right font-mono text-slate-900 font-bold">
+                      {formatIDR(item.totalRevenue)}
                     </td>
                   </tr>
                 ))}
@@ -604,3 +644,4 @@ export default function Dashboard({ clients, projects, services }: DashboardProp
     </div>
   );
 }
+

@@ -35,7 +35,7 @@ export default function NewClient({
   // Form states
   const [formData, setFormData] = useState({
     companyName: '',
-    industry: 'Makanan & Minuman',
+    industry: '',
     address: '',
     email: '',
     phone: '',
@@ -45,7 +45,7 @@ export default function NewClient({
     picEmail: '',
     picPhone: '',
     leadSource: 'Website',
-    potentialRevenue: 5000000,
+    potentialRevenue: 0,
     assignedSales: 'Budi Santoso',
     status: 'Prospect' as ClientStatus,
     isFirstTransaction: true,
@@ -53,9 +53,9 @@ export default function NewClient({
 
   const [editFormData, setEditFormData] = useState<Partial<Client>>({});
 
-  const industries = [
-    'Makanan & Minuman', 'Farmasi & Kosmetik', 'Pertambangan & Energi', 
-    'Pertanian & Perkebunan', 'Tekstil & Garment', 'Manufaktur', 'Lainnya'
+  const defaultIndustries = [
+    'Food & Beverage', 'Pharmaceuticals & Cosmetics', 'Mining & Energy', 
+    'Agriculture & Plantation', 'Textiles & Garments', 'Manufacturing', 'Chemicals & Environment'
   ];
 
   const leadSources = [
@@ -93,7 +93,7 @@ export default function NewClient({
     // Reset
     setFormData({
       companyName: '',
-      industry: 'Makanan & Minuman',
+      industry: '',
       address: '',
       email: '',
       phone: '',
@@ -103,7 +103,7 @@ export default function NewClient({
       picEmail: '',
       picPhone: '',
       leadSource: 'Website',
-      potentialRevenue: 5000000,
+      potentialRevenue: 0,
       assignedSales: 'Budi Santoso',
       status: 'Prospect' as ClientStatus,
       isFirstTransaction: true,
@@ -167,13 +167,13 @@ export default function NewClient({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Lead & Client Intake Manager</h2>
-          <p className="text-sm text-slate-400 mt-1">Registrasi profil perusahaan, data PIC penguji, pencatatan log kunjungan/follow-up harian sales.</p>
+          <p className="text-sm text-slate-400 mt-1">Company profile registration, testing PIC contacts, and daily sales follow-up activity logs.</p>
         </div>
         <button 
           onClick={() => setIsAddModalOpen(true)}
           className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-750 rounded-lg transition-all shadow-xs cursor-pointer"
         >
-          <Plus className="h-4 w-4" /> Tambah Klien Leads Baru
+          <Plus className="h-4 w-4" /> Add New Client / Lead
         </button>
       </div>
 
@@ -185,7 +185,7 @@ export default function NewClient({
           </div>
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Prospects</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5">Database Klien Potensial</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Potential Client Database</p>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ export default function NewClient({
           </div>
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Negotiation</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5">Quotation Sedang Direview</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Quotations Under Review</p>
           </div>
         </div>
 
@@ -205,7 +205,7 @@ export default function NewClient({
           </div>
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Won / Active</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5">Sering Mengirim Sampel</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Active Sample Submitter</p>
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export default function NewClient({
           </div>
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lost Deal</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5">Prospect Gagal Closing</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Unclosed Prospects</p>
           </div>
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function NewClient({
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari nama PT Klien, nama PIC penguji, atau industri..."
+            placeholder="Search client name, testing PIC name, or industry..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden bg-slate-50/50"
@@ -240,16 +240,15 @@ export default function NewClient({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full py-1.8 text-xs text-slate-700 bg-white border border-slate-200 rounded-lg focus:outline-hidden"
           >
-            <option value="All">Semua Funnel CRM</option>
+            <option value="All">All CRM Funnel Statuses</option>
             {clientStatuses.map(st => <option key={st} value={st}>{st}</option>)}
           </select>
         </div>
       </div>
 
-      {/* DETAILED CARDS OF CLIENTS LIST */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* DETAILED CARDS OF CLIENTS LIST - 3 COLUMNS PER ROW */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredClients.map((client) => {
-          // Find follow up alert if status is Prospect/Negotiation and no note with over 7 days
           return (
             <div 
               key={client.id}
@@ -263,7 +262,7 @@ export default function NewClient({
                     <h3 className="font-bold text-slate-900 text-sm mt-1">{client.companyName}</h3>
                   </div>
                   
-                  <span className={`px-2.5 py-0.8 rounded-full text-[9px] border font-bold ${
+                  <span className={`px-2.5 py-0.8 rounded-full text-[9px] border font-bold shrink-0 ${
                     client.status === 'Won' 
                       ? 'bg-teal-50 text-teal-700 border-teal-200' 
                       : client.status === 'Lost' 
@@ -274,18 +273,12 @@ export default function NewClient({
                   </span>
                 </div>
 
-                {/* Potentials & contact */}
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs border-y border-slate-100/70 py-3 my-3">
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Nilai Prospek</span>
-                    <span className="font-mono font-bold text-teal-900">{formatIDR(client.potentialRevenue)}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Atribusi Transaksi</span>
-                    <span className="font-semibold text-slate-700">
-                      {client.isFirstTransaction ? 'Perdana (Klien Baru)' : 'Retained (Klien Lama)'}
-                    </span>
-                  </div>
+                {/* Attribution info */}
+                <div className="mt-3 border-y border-slate-100/70 py-2 my-3 text-xs flex items-center justify-between">
+                  <span className="text-slate-400 text-[10px]">Client Attribution:</span>
+                  <span className="font-semibold text-slate-700 text-[11px]">
+                    {client.isFirstTransaction ? 'First-Time (New Client)' : 'Retained (Existing Client)'}
+                  </span>
                 </div>
 
                 {/* PIC Card info */}
@@ -295,40 +288,40 @@ export default function NewClient({
                     <span><b>{client.picName}</b> ({client.picPosition})</span>
                   </div>
 
-                  <div className="flex items-center gap-4 text-slate-500 text-[11px] pl-5">
-                    <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {client.picPhone}</span>
-                    <span className="flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {client.picEmail}</span>
+                  <div className="flex flex-col gap-1 text-slate-500 text-[11px] pl-5">
+                    <span className="flex items-center gap-1.5"><Phone className="h-3 w-3 text-slate-400" /> {client.picPhone}</span>
+                    <span className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 text-slate-400" /> {client.picEmail}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Botton action controls */}
+              {/* Bottom action controls */}
               <div className="pt-3 border-t border-slate-100/80 flex items-center justify-between text-xs">
                 <span className="text-[10px] text-slate-400">Sales: <b>{client.assignedSales}</b></span>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setActiveClientForNotes(client)}
-                    className="flex items-center gap-1 bg-slate-50 hover:bg-slate-150 text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 bg-slate-50 hover:bg-slate-150 text-slate-700 border border-slate-200 rounded-lg px-2 py-1 transition-colors cursor-pointer text-[11px]"
                   >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    Interaction Notes ({client.activityNotes.length})
+                    <BookOpen className="h-3 w-3" />
+                    Notes ({client.activityNotes.length})
                   </button>
                   <button
                     onClick={() => handleEditClick(client)}
-                    className="p-1.5 text-slate-550 hover:text-teal-600 hover:bg-slate-100 rounded-lg"
-                    title="Edit Profil Klien"
+                    className="p-1.5 text-slate-550 hover:text-teal-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    title="Edit Client Profile"
                   >
                     <Edit2 className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm(`Hapus registrasi klien ${client.companyName}?`)) {
+                      if (confirm(`Delete client registration for ${client.companyName}?`)) {
                         onDeleteClient(client.id);
                       }
                     }}
-                    className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-slate-100 rounded-lg"
-                    title="Hapus Klien"
+                    className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                    title="Delete Client"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -345,8 +338,8 @@ export default function NewClient({
           <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden border border-slate-100 shadow-xl animate-fade-in my-8">
             <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg">Edit Profil Klien Perusahaan</h3>
-                <p className="text-xs text-slate-300">Ubah detail PIC, draf alamat atau status pipeline penjualan</p>
+                <h3 className="font-bold text-lg">Edit Company Client Profile</h3>
+                <p className="text-xs text-slate-300">Update PIC details, address, or sales pipeline status</p>
               </div>
               <button onClick={() => setEditingClient(null)} className="text-slate-300 hover:text-white text-xl font-bold cursor-pointer">&times;</button>
             </div>
@@ -354,7 +347,7 @@ export default function NewClient({
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
               {/* Co name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Perusahaan Klien</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Company Client Name</label>
                 <input
                   type="text"
                   value={editFormData.companyName || ''}
@@ -367,18 +360,22 @@ export default function NewClient({
               {/* Industry & Source */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Sektor Industri</label>
-                  <select
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Industry Sector</label>
+                  <input
+                    type="text"
+                    list="industry-suggestions"
+                    placeholder="e.g., Petrochemical, Pharmaceuticals, Food..."
                     value={editFormData.industry || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, industry: e.target.value })}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-xs"
-                  >
-                    {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                  </select>
+                    className="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white"
+                  />
+                  <datalist id="industry-suggestions">
+                    {defaultIndustries.map(ind => <option key={ind} value={ind} />)}
+                  </datalist>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Asal Leads</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Lead Source</label>
                   <select
                     value={editFormData.leadSource || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, leadSource: e.target.value })}
@@ -392,7 +389,7 @@ export default function NewClient({
               {/* Status and sales */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Status Pipeline Penjualan</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Sales Pipeline Status</label>
                   <select
                     value={editFormData.status || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as ClientStatus })}
@@ -403,7 +400,7 @@ export default function NewClient({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Sales Atribusi</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Assigned Sales Rep</label>
                   <select
                     value={editFormData.assignedSales || ''}
                     onChange={(e) => setEditFormData({ ...editFormData, assignedSales: e.target.value })}
@@ -417,8 +414,8 @@ export default function NewClient({
               {/* First transaction toggle */}
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-150">
                 <div className="text-xs">
-                  <span className="font-semibold block text-slate-700">First-Time Client (Nasabah Baru)</span>
-                  <span className="text-[10px] text-slate-450">Bila aktif, penugasan completed lunas akan digandakan komisi 2.5%</span>
+                  <span className="font-semibold block text-slate-700">First-Time Client (New Client)</span>
+                  <span className="text-[10px] text-slate-450">When enabled, paid completed orders qualify for a 2.5% incentive bonus</span>
                 </div>
                 <input
                   type="checkbox"
@@ -430,11 +427,11 @@ export default function NewClient({
 
               {/* PIC fields */}
               <div className="border-t border-slate-200/60 pt-4 space-y-3">
-                <span className="text-xs font-bold text-slate-800">Kontak PIC QC/Lab Klien</span>
+                <span className="text-xs font-bold text-slate-800">Client QC/Lab PIC Contact</span>
                 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-slate-600">Nama Lengkap PIC</label>
+                    <label className="block text-[10px] text-slate-600">Full Name of PIC</label>
                     <input
                       type="text"
                       value={editFormData.picName || ''}
@@ -443,7 +440,7 @@ export default function NewClient({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-600">Jabatan PIC</label>
+                    <label className="block text-[10px] text-slate-600">PIC Position</label>
                     <input
                       type="text"
                       value={editFormData.picPosition || ''}
@@ -455,7 +452,7 @@ export default function NewClient({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-slate-600">Email Kerja PIC</label>
+                    <label className="block text-[10px] text-slate-600">PIC Work Email</label>
                     <input
                       type="email"
                       value={editFormData.picEmail || ''}
@@ -464,7 +461,7 @@ export default function NewClient({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-slate-600">No. HP/WhatsApp</label>
+                    <label className="block text-[10px] text-slate-600">Phone / WhatsApp No.</label>
                     <input
                       type="text"
                       value={editFormData.picPhone || ''}
@@ -481,13 +478,13 @@ export default function NewClient({
                   onClick={() => setEditingClient(null)}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button 
                   type="submit"
                   className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Simpan Klien
+                  Save Client
                 </button>
               </div>
             </form>
@@ -500,16 +497,16 @@ export default function NewClient({
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-100 shadow-xl overflow-hidden animate-fade-in my-8">
             <div className="bg-teal-700 text-white p-5">
-              <h3 className="font-bold text-lg">Daftarkan Klien / Leads Baru</h3>
-              <p className="text-xs text-teal-150">Profilkan prospek instansi atau komersial manufaktur di sistem penjualan</p>
+              <h3 className="font-bold text-lg">Register New Client / Lead</h3>
+              <p className="text-xs text-teal-150">Add institutional or commercial leads into the sales tracking database</p>
             </div>
 
             <form onSubmit={handleSubmitAdd} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Perusahaan / Institusi</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Company / Institution Name</label>
                 <input
                   type="text"
-                  placeholder="Misal: PT Aneka Pangan Sejahtera"
+                  placeholder="e.g., PT Food Supreme"
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs"
@@ -519,18 +516,23 @@ export default function NewClient({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Sektor Industri</label>
-                  <select
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Industry Sector</label>
+                  <input
+                    type="text"
+                    list="add-industry-suggestions"
+                    placeholder="e.g., Petrochemical, Food, Pharma..."
                     value={formData.industry}
                     onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                     className="w-full p-2 border border-slate-200 rounded-lg text-xs"
-                  >
-                    {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                  </select>
+                    required
+                  />
+                  <datalist id="add-industry-suggestions">
+                    {defaultIndustries.map(ind => <option key={ind} value={ind} />)}
+                  </datalist>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Asal Leads</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Lead Source</label>
                   <select
                     value={formData.leadSource}
                     onChange={(e) => setFormData({ ...formData, leadSource: e.target.value })}
@@ -541,57 +543,24 @@ export default function NewClient({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Potensi Nilai Kontrak (Rp)</label>
-                  <input
-                    type="number"
-                    value={formData.potentialRevenue}
-                    onChange={(e) => setFormData({ ...formData, potentialRevenue: Number(e.target.value) })}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-xs font-mono font-bold"
-                  />
+              <div className="p-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between">
+                <div className="text-xs">
+                  <span className="font-semibold text-slate-700 block">New Client Status / First Transaction</span>
+                  <span className="text-[10px] text-slate-500">New clients within their first year qualify for a 2.5% incentive commission</span>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Sales Pendamping</label>
-                  <select
-                    value={formData.assignedSales}
-                    onChange={(e) => setFormData({ ...formData, assignedSales: e.target.value })}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-xs"
-                  >
-                    {salesPeople.map(sp => <option key={sp} value={sp}>{sp}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Funnel Awal</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as ClientStatus })}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-xs"
-                  >
-                    {clientStatuses.map(cs => <option key={cs} value={cs}>{cs}</option>)}
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-150 rounded-lg text-xs">
-                  <span className="font-semibold text-slate-600 text-[10px]">Tandai Klien Baru?</span>
-                  <input
-                    type="checkbox"
-                    checked={formData.isFirstTransaction}
-                    onChange={(e) => setFormData({ ...formData, isFirstTransaction: e.target.checked })}
-                    className="h-4 w-4 accent-teal-600"
-                  />
-                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isFirstTransaction}
+                  onChange={(e) => setFormData({ ...formData, isFirstTransaction: e.target.checked })}
+                  className="h-4.5 w-4.5 accent-teal-600 cursor-pointer shrink-0"
+                />
               </div>
 
               {/* Address details */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Alamat Pabrik/Gedung Klien</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Client Factory / Office Address</label>
                 <textarea
-                  placeholder="Kawasan Industri, Blok, Jalan No..."
+                  placeholder="Industrial Area, Block, Street No..."
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full p-2 border border-slate-200 rounded-lg text-xs h-12"
@@ -600,18 +569,18 @@ export default function NewClient({
 
               {/* PIC */}
               <div className="border-t border-slate-150 pt-3 space-y-2">
-                <span className="text-xs font-bold text-slate-800">Kontak Person PIC Utama</span>
+                <span className="text-xs font-bold text-slate-800">Primary PIC Contact Person</span>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
-                    placeholder="Nama PIC QC"
+                    placeholder="QC PIC Name"
                     value={formData.picName}
                     onChange={(e) => setFormData({ ...formData, picName: e.target.value })}
                     className="p-2 border border-slate-200 rounded-lg text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="Jabatan PIC"
+                    placeholder="PIC Position"
                     value={formData.picPosition}
                     onChange={(e) => setFormData({ ...formData, picPosition: e.target.value })}
                     className="p-2 border border-slate-200 rounded-lg text-xs"
@@ -620,14 +589,14 @@ export default function NewClient({
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="email"
-                    placeholder="Email PIC"
+                    placeholder="PIC Email"
                     value={formData.picEmail}
                     onChange={(e) => setFormData({ ...formData, picEmail: e.target.value })}
                     className="p-2 border border-slate-200 rounded-lg text-xs"
                   />
                   <input
                     type="text"
-                    placeholder="No. Telp PIC"
+                    placeholder="PIC Phone No."
                     value={formData.picPhone}
                     onChange={(e) => setFormData({ ...formData, picPhone: e.target.value })}
                     className="p-2 border border-slate-200 rounded-lg text-xs"
@@ -641,13 +610,13 @@ export default function NewClient({
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button 
                   type="submit"
                   className="px-5 py-2 bg-teal-600 text-white hover:bg-teal-700 rounded-lg text-xs font-semibold cursor-pointer"
                 >
-                  Daftarkan Klien
+                  Register Client
                 </button>
               </div>
             </form>
@@ -672,10 +641,10 @@ export default function NewClient({
               
               {/* Note input form */}
               <form onSubmit={handleAddNoteSubmit} className="space-y-3 bg-slate-50/70 p-4 rounded-xl border border-slate-200/60">
-                <span className="text-xs font-bold text-slate-800">Tambahkan Catatan Follow-up Baru</span>
+                <span className="text-xs font-bold text-slate-800">Add New Follow-Up Note</span>
                 
                 <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-[10px] text-slate-400 font-semibold uppercase">Petugas Penulis:</label>
+                  <label className="text-[10px] text-slate-400 font-semibold uppercase">Note Author:</label>
                   <select
                     value={newNoteAuthor}
                     onChange={(e) => setNewNoteAuthor(e.target.value)}
@@ -686,7 +655,7 @@ export default function NewClient({
                 </div>
 
                 <textarea
-                  placeholder="Tulis interaksi... Misal: Menghubungi via WhatsApp, menanyakan perihal quotation nomor QT-0129..."
+                  placeholder="Write interaction log... e.g. Contacted via WhatsApp regarding quotation QT-0129..."
                   value={newNoteContent}
                   onChange={(e) => setNewNoteContent(e.target.value)}
                   className="w-full p-2 border border-slate-200 bg-white rounded-lg text-xs h-16 focus:outline-hidden"
@@ -698,24 +667,24 @@ export default function NewClient({
                     type="submit"
                     className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-md text-[10px] font-semibold cursor-pointer"
                   >
-                    Simpan Catatan
+                    Save Note
                   </button>
                 </div>
               </form>
 
               {/* Logs Timeline */}
               <div className="space-y-4 pt-4">
-                <span className="text-xs font-bold text-slate-800 block">Riwayat Interaksi ({activeClientForNotes.activityNotes.length})</span>
+                <span className="text-xs font-bold text-slate-800 block">Interaction History ({activeClientForNotes.activityNotes.length})</span>
                 
                 {activeClientForNotes.activityNotes.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4 italic">Belum ada catatan aktivitas. Tim sales dapat menginput draf jurnal pertamanya di atas.</p>
+                  <p className="text-xs text-slate-400 text-center py-4 italic">No activity notes recorded yet. The sales team can add interaction logs above.</p>
                 ) : (
                   <div className="space-y-3 relative before:absolute before:top-2 before:bottom-2 before:left-3.5 before:w-0.5 before:bg-slate-100 pl-8">
                     {[...activeClientForNotes.activityNotes].reverse().map((note) => (
                       <div key={note.id} className="relative bg-slate-50/40 p-3 rounded-lg border border-slate-100 text-xs">
                         <div className="absolute -left-7.5 top-3.5 w-2.5 h-2.5 rounded-full bg-teal-600 shadow-xs ring-4 ring-white"></div>
                         <div className="flex justify-between items-center text-slate-450 text-[10px] mb-1">
-                          <span className="font-semibold text-slate-600">Oleh: {note.author}</span>
+                          <span className="font-semibold text-slate-600">By: {note.author}</span>
                           <span className="font-mono flex items-center gap-1">
                             <Clock className="h-2.5 w-2.5" />
                             {note.date}
@@ -736,7 +705,7 @@ export default function NewClient({
                 onClick={() => setActiveClientForNotes(null)}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-250 text-slate-700 font-semibold text-xs rounded-lg cursor-pointer animate-fade-in"
               >
-                Tutup Jurnal
+                Close Journal
               </button>
             </div>
           </div>

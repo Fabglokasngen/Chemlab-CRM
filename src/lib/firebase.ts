@@ -7,8 +7,20 @@ import {
   doc, 
   setDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  getDoc
 } from 'firebase/firestore';
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  User as FirebaseUser
+} from 'firebase/auth';
 import { 
   INITIAL_SERVICES, 
   INITIAL_CLIENTS, 
@@ -16,7 +28,7 @@ import {
   INITIAL_INCENTIVES,
   INITIAL_SALES_EMPLOYEES
 } from '../data/mockData';
-import { Service, Client, Project, Incentive, SalesEmployee } from '../types';
+import { Service, Client, Project, Incentive, SalesEmployee, UserProfile, UserRole } from '../types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCyw1X6bpHXh_cu4ZoPrX_yZ-RRtM6lQoY",
@@ -33,7 +45,70 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore with specific Database ID
 const db = getFirestore(app, "ai-studio-b426de26-e765-454b-af40-6d46739bbdf8");
 
-export { db };
+// Initialize Auth & Providers
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+export { db, auth, googleProvider };
+
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+  };
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error Details:', JSON.stringify(errInfo));
+  return errInfo;
+}
+
+// --- USER PROFILE & AUTH FIRESTORE SERVICES ---
+export async function getUserProfileDoc(uid: string): Promise<UserProfile | null> {
+  try {
+    const userDocRef = doc(db, 'users', uid);
+    const snapshot = await getDoc(userDocRef);
+    if (snapshot.exists()) {
+      return snapshot.data() as UserProfile;
+    }
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, `users/${uid}`);
+    return null;
+  }
+}
+
+export async function saveUserProfileDoc(profile: UserProfile): Promise<void> {
+  try {
+    const userDocRef = doc(db, 'users', profile.uid);
+    await setDoc(userDocRef, profile, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `users/${profile.uid}`);
+  }
+}
 
 // Firestore collection operations with local cache fallback
 export async function getServicesFromDb(): Promise<Service[]> {
@@ -46,7 +121,7 @@ export async function getServicesFromDb(): Promise<Service[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
   } catch (error) {
-    console.error('Error fetching services from Firestore, using seeder fallback:', error);
+    handleFirestoreError(error, OperationType.LIST, 'services');
     return INITIAL_SERVICES;
   }
 }
@@ -61,7 +136,7 @@ export async function getClientsFromDb(): Promise<Client[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
   } catch (error) {
-    console.error('Error fetching clients from Firestore, using seeder fallback:', error);
+    handleFirestoreError(error, OperationType.LIST, 'clients');
     return INITIAL_CLIENTS;
   }
 }
@@ -76,7 +151,7 @@ export async function getProjectsFromDb(): Promise<Project[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
   } catch (error) {
-    console.error('Error fetching projects from Firestore, using seeder fallback:', error);
+    handleFirestoreError(error, OperationType.LIST, 'projects');
     return INITIAL_PROJECTS;
   }
 }
@@ -91,7 +166,7 @@ export async function getIncentivesFromDb(): Promise<Incentive[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Incentive));
   } catch (error) {
-    console.error('Error fetching incentives from Firestore, using seeder fallback:', error);
+    handleFirestoreError(error, OperationType.LIST, 'incentives');
     return INITIAL_INCENTIVES;
   }
 }
@@ -106,7 +181,7 @@ export async function getSalesEmployeesFromDb(): Promise<SalesEmployee[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesEmployee));
   } catch (error) {
-    console.error('Error fetching sales employees from Firestore, using seeder fallback:', error);
+    handleFirestoreError(error, OperationType.LIST, 'sales_employees');
     return INITIAL_SALES_EMPLOYEES;
   }
 }
@@ -123,13 +198,20 @@ async function seedCollection(collectionName: string, initialData: any[]) {
     await batch.commit();
     console.log(`Seeding ${collectionName} completed successfully.`);
   } catch (err) {
-    console.error(`Failed to seed ${collectionName}:`, err);
+    handleFirestoreError(err, OperationType.WRITE, collectionName);
   }
 }
 
 // CRUD operations
 export async function dbAddService(service: Service) {
-  await setDoc(doc(db, 'services', service.id), service);
+  const currentUid = auth.currentUser?.uid;
+  const currentEmail = auth.currentUser?.email;
+  const data = {
+    ...service,
+    ...(currentUid ? { userId: currentUid } : {}),
+    ...(currentEmail ? { ownerEmail: currentEmail } : {})
+  };
+  await setDoc(doc(db, 'services', service.id), data);
 }
 
 export async function dbUpdateService(id: string, updated: Partial<Service>) {
@@ -141,7 +223,14 @@ export async function dbDeleteService(id: string) {
 }
 
 export async function dbAddClient(client: Client) {
-  await setDoc(doc(db, 'clients', client.id), client);
+  const currentUid = auth.currentUser?.uid;
+  const currentEmail = auth.currentUser?.email;
+  const data = {
+    ...client,
+    ...(currentUid && !client.userId ? { userId: currentUid } : {}),
+    ...(currentEmail && !client.ownerEmail ? { ownerEmail: currentEmail } : {})
+  };
+  await setDoc(doc(db, 'clients', client.id), data);
 }
 
 export async function dbUpdateClient(id: string, updated: Partial<Client>) {
@@ -153,7 +242,14 @@ export async function dbDeleteClient(id: string) {
 }
 
 export async function dbAddProject(project: Project) {
-  await setDoc(doc(db, 'projects', project.id), project);
+  const currentUid = auth.currentUser?.uid;
+  const currentEmail = auth.currentUser?.email;
+  const data = {
+    ...project,
+    ...(currentUid && !project.userId ? { userId: currentUid } : {}),
+    ...(currentEmail && !project.ownerEmail ? { ownerEmail: currentEmail } : {})
+  };
+  await setDoc(doc(db, 'projects', project.id), data);
 }
 
 export async function dbUpdateProject(id: string, updated: Partial<Project>) {
@@ -165,7 +261,14 @@ export async function dbDeleteProject(id: string) {
 }
 
 export async function dbAddIncentive(incentive: Incentive) {
-  await setDoc(doc(db, 'incentives', incentive.id), incentive);
+  const currentUid = auth.currentUser?.uid;
+  const currentEmail = auth.currentUser?.email;
+  const data = {
+    ...incentive,
+    ...(currentUid && !incentive.userId ? { userId: currentUid } : {}),
+    ...(currentEmail && !incentive.ownerEmail ? { ownerEmail: currentEmail } : {})
+  };
+  await setDoc(doc(db, 'incentives', incentive.id), data);
 }
 
 export async function dbUpdateIncentive(id: string, updated: Partial<Incentive>) {

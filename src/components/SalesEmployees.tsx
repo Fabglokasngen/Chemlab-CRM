@@ -51,13 +51,13 @@ export default function SalesEmployees({
   const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email) {
-      alert('Nama dan Email wajib diisi!');
+      alert('Name and Email are required!');
       return;
     }
     
     // Check duplication name
     if (employees.some(emp => emp.name.toLowerCase() === formData.name.toLowerCase())) {
-      alert('Karyawan sales dengan nama ini sudah terdaftar!');
+      alert('A sales employee with this name is already registered!');
       return;
     }
 
@@ -86,7 +86,7 @@ export default function SalesEmployees({
     e.preventDefault();
     if (!editingEmployee) return;
     if (!editFormData.name || !editFormData.email) {
-      alert('Nama dan Email wajib diisi!');
+      alert('Name and Email are required!');
       return;
     }
 
@@ -116,7 +116,7 @@ export default function SalesEmployees({
 
   // Export to CSV helper
   const handleExportCSV = () => {
-    const headers = ['ID', 'Nama Karyawan', 'Email', 'No Telepon', 'Jabatan/Role', 'Target Bulanan', 'Pencapaian Bulan Ini', 'Status', 'Tanggal Bergabung'];
+    const headers = ['ID', 'Employee Name', 'Email', 'Phone Number', 'Role / Position', 'Monthly Target', 'Achieved This Month', 'Status', 'Joined Date'];
     const rows = filteredEmployees.map(emp => [
       emp.id,
       emp.name,
@@ -126,7 +126,7 @@ export default function SalesEmployees({
       emp.targetMonthly,
       emp.achievedThisMonth,
       emp.status,
-      emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('id-ID') : '-'
+      emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('en-US') : '-'
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -148,10 +148,10 @@ export default function SalesEmployees({
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <UserPlus className="w-6 h-6 text-teal-600" />
-            Kelola Sales Karyawan
+            Sales Team Management
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Pantau performa target, kelola data sales representative lab, dan rekap kinerja bulanan masing-masing karyawan.
+            Monitor performance targets, manage sales representatives, and track monthly sales performance.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -160,14 +160,14 @@ export default function SalesEmployees({
             className="flex items-center gap-2 px-4 py-2 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 text-sm font-medium transition cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            Ekspor CSV
+            Export CSV
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition shadow-sm hover:shadow cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Tambah Sales Baru
+            Add New Sales Rep
           </button>
         </div>
       </div>
@@ -180,9 +180,9 @@ export default function SalesEmployees({
             <Briefcase className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">Total Sales Karyawan</p>
-            <h3 className="text-xl font-bold text-slate-800">{totalEmployees} Orang</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{activeEmployees} Karyawan Aktif</p>
+            <p className="text-xs text-slate-400 font-medium">Total Sales Staff</p>
+            <h3 className="text-xl font-bold text-slate-800">{totalEmployees} Members</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{activeEmployees} Active Representatives</p>
           </div>
         </div>
 
@@ -192,9 +192,9 @@ export default function SalesEmployees({
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">Total Target Bulanan (Aktif)</p>
+            <p className="text-xs text-slate-400 font-medium">Total Monthly Target (Active)</p>
             <h3 className="text-xl font-bold text-slate-800">{formatIDR(totalTarget)}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Kumulatif seluruh divisi sales</p>
+            <p className="text-xs text-slate-500 mt-0.5">Cumulative active sales targets</p>
           </div>
         </div>
 
@@ -204,10 +204,10 @@ export default function SalesEmployees({
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">Total Pencapaian Bulan Ini</p>
+            <p className="text-xs text-slate-400 font-medium">Total Achievements This Month</p>
             <h3 className="text-xl font-bold text-slate-800 text-indigo-600">{formatIDR(totalAchieved)}</h3>
             <p className="text-xs text-indigo-500 font-medium mt-0.5">
-              {avgAchievementPercent.toFixed(1)}% dari Total Target
+              {avgAchievementPercent.toFixed(1)}% of Total Target
             </p>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function SalesEmployees({
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-400 font-medium">Persentase Capaian Kumulatif</p>
+            <p className="text-xs text-slate-400 font-medium">Cumulative Progression Rate</p>
             <div className="flex items-center space-x-2">
               <h3 className="text-xl font-bold text-slate-800">{avgAchievementPercent.toFixed(1)}%</h3>
               <div className="w-16 bg-slate-100 h-2 rounded-full overflow-hidden">
@@ -242,7 +242,7 @@ export default function SalesEmployees({
           </span>
           <input
             type="text"
-            placeholder="Cari nama, email, telepon, jabatan..."
+            placeholder="Search name, email, phone, role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-slate-700 bg-slate-50/50"
@@ -255,19 +255,19 @@ export default function SalesEmployees({
             onClick={() => setStatusFilter('All')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-transform transition ${statusFilter === 'All' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            Semua ({totalEmployees})
+            All ({totalEmployees})
           </button>
           <button
             onClick={() => setStatusFilter('Active')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${statusFilter === 'Active' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            Aktif ({activeEmployees})
+            Active ({activeEmployees})
           </button>
           <button
             onClick={() => setStatusFilter('Inactive')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${statusFilter === 'Inactive' ? 'bg-white text-rose-500 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            Non-Aktif ({totalEmployees - activeEmployees})
+            Inactive ({totalEmployees - activeEmployees})
           </button>
         </div>
       </div>
@@ -278,8 +278,8 @@ export default function SalesEmployees({
           <div className="mx-auto w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
             <Search className="w-8 h-8" />
           </div>
-          <p className="text-slate-500 font-medium">Data sales karyawan tidak ditemukan</p>
-          <p className="text-slate-400 text-xs mt-1">Coba sesuaikan kata kunci pencarian atau filter status Anda.</p>
+          <p className="text-slate-500 font-medium">No sales employee records found</p>
+          <p className="text-slate-400 text-xs mt-1">Try adjusting your search keywords or status filter.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -317,9 +317,9 @@ export default function SalesEmployees({
                           <h3 className="font-bold text-slate-800 leading-tight flex items-center gap-1.5">
                             {emp.name}
                             {emp.status === 'Active' ? (
-                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50" title="Aktif" />
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50" title="Active" />
                             ) : (
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" title="Non-Aktif" />
+                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" title="Inactive" />
                             )}
                           </h3>
                           <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase block mt-0.5">{emp.role}</span>
@@ -332,7 +332,7 @@ export default function SalesEmployees({
                           ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
                           : 'bg-slate-50 text-slate-400 border border-slate-100'
                       }`}>
-                        {emp.status === 'Active' ? 'Aktif' : 'Nonaktif'}
+                        {emp.status === 'Active' ? 'Active' : 'Inactive'}
                       </span>
                     </div>
 
@@ -351,7 +351,7 @@ export default function SalesEmployees({
                     {/* Target performance bars */}
                     <div className="mt-5 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
                       <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-slate-400 font-semibold">Pencapaian Bulan Ini</span>
+                        <span className="text-slate-400 font-semibold">Monthly Achievement</span>
                         <span className="font-bold text-slate-700">{achievementRate.toFixed(1)}%</span>
                       </div>
                       
@@ -365,7 +365,7 @@ export default function SalesEmployees({
 
                       <div className="flex justify-between text-xs mt-2">
                         <div>
-                          <span className="text-slate-400 block text-[10px] uppercase">Selesai (Revenue)</span>
+                          <span className="text-slate-400 block text-[10px] uppercase">Completed Revenue</span>
                           <span className="font-bold text-teal-600">{formatIDR(emp.achievedThisMonth)}</span>
                         </div>
                         <div className="text-right">
@@ -381,7 +381,7 @@ export default function SalesEmployees({
                     <button
                       onClick={() => handleEditClick(emp)}
                       className="p-2 text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition"
-                      title="Edit Data Sales"
+                      title="Edit Sales Rep"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -390,7 +390,7 @@ export default function SalesEmployees({
                         setDeletingEmployee(emp);
                       }}
                       className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                      title="Hapus Sales"
+                      title="Delete Sales Rep"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -409,14 +409,14 @@ export default function SalesEmployees({
             <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-5">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <UserPlus className="w-5 h-5" />
-                Registrasi Sales Karyawan Baru
+                Register New Sales Representative
               </h3>
-              <p className="text-teal-100 text-xs mt-1">Masukkan spesifikasi identitas & target kerja marketing baru.</p>
+              <p className="text-teal-100 text-xs mt-1">Enter representative credentials and monthly revenue targets.</p>
             </div>
             
             <form onSubmit={handleSubmitAdd} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap*</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Full Name*</label>
                 <input
                   type="text"
                   required
@@ -429,7 +429,7 @@ export default function SalesEmployees({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Email Kantor*</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Work Email*</label>
                   <input
                     type="email"
                     required
@@ -440,7 +440,7 @@ export default function SalesEmployees({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">No. Handphone</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={formData.phone}
@@ -453,7 +453,7 @@ export default function SalesEmployees({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Jabatan / Role</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Role / Position</label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -467,20 +467,20 @@ export default function SalesEmployees({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Status Karyawan</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Employee Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Active' | 'Inactive' })}
                     className="w-full px-3 py-2 border border-slate-205 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-slate-700"
                   >
-                    <option value="Active">Aktif</option>
-                    <option value="Inactive">Non-Aktif</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Target Bulanan (IDR/Rp)*</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Target (IDR)*</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm font-semibold">Rp</span>
                   <input
@@ -499,13 +499,13 @@ export default function SalesEmployees({
                   onClick={() => setIsAddModalOpen(false)}
                   className="flex-1 px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-slate-500 text-sm font-medium transition"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
                 >
-                  Simpan Sales
+                  Save Representative
                 </button>
               </div>
             </form>
@@ -520,14 +520,14 @@ export default function SalesEmployees({
             <div className="bg-slate-800 text-white p-5">
               <h3 className="font-bold text-lg flex items-center gap-2">
                 <Edit2 className="w-5 h-5 text-teal-400" />
-                Ubah Profil Sales Karyawan
+                Edit Sales Representative Profile
               </h3>
-              <p className="text-slate-300 text-xs mt-1">Perbarui rincian, jabatan, target bulanan, atau pencapaian.</p>
+              <p className="text-slate-300 text-xs mt-1">Update contact details, position, monthly target, or achievements.</p>
             </div>
             
             <form onSubmit={handleSaveEdit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap*</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Full Name*</label>
                 <input
                   type="text"
                   required
@@ -539,7 +539,7 @@ export default function SalesEmployees({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Email Kantor*</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Work Email*</label>
                   <input
                     type="email"
                     required
@@ -549,7 +549,7 @@ export default function SalesEmployees({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">No. Handphone</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={editFormData.phone || ''}
@@ -561,7 +561,7 @@ export default function SalesEmployees({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Jabatan / Role</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Role / Position</label>
                   <select
                     value={editFormData.role || 'Sales Representative'}
                     onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
@@ -575,21 +575,21 @@ export default function SalesEmployees({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 font-bold">Status Keaktifan</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 font-bold">Active Status</label>
                   <select
                     value={editFormData.status || 'Active'}
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as 'Active' | 'Inactive' })}
                     className="w-full px-3 py-2 border border-slate-205 rounded-xl text-sm bg-white font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 text-slate-750"
                   >
-                    <option value="Active" className="text-emerald-600 font-bold">Aktif</option>
-                    <option value="Inactive" className="text-rose-500 font-bold">Non-aktif</option>
+                    <option value="Active" className="text-emerald-600 font-bold">Active</option>
+                    <option value="Inactive" className="text-rose-500 font-bold">Inactive</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Target Bulanan (Rp)</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Target (IDR)</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs font-semibold">Rp</span>
                     <input
@@ -602,7 +602,7 @@ export default function SalesEmployees({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Capaian Transaksi (Rp)</label>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Transaction Achievements (IDR)</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs font-semibold">Rp</span>
                     <input
@@ -621,13 +621,13 @@ export default function SalesEmployees({
                   onClick={() => setEditingEmployee(null)}
                   className="flex-1 px-4 py-2 border border-slate-205 hover:bg-slate-50 rounded-xl text-slate-500 text-sm font-medium transition"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
                 >
-                  Simpan Perubahan
+                  Save Changes
                 </button>
               </div>
             </form>
@@ -644,8 +644,8 @@ export default function SalesEmployees({
                 <Trash2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Konfirmasi Hapus Karyawan</h3>
-                <p className="text-rose-100 text-xs mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+                <h3 className="font-bold text-lg">Confirm Delete Employee</h3>
+                <p className="text-rose-100 text-xs mt-0.5">This action cannot be undone.</p>
               </div>
             </div>
             
@@ -653,15 +653,15 @@ export default function SalesEmployees({
               <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl text-sm text-rose-800 flex items-start gap-3">
                 <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-rose-900">Perhatian Penting</p>
+                  <p className="font-semibold text-rose-900">Important Notice</p>
                   <p className="text-xs text-rose-700 mt-1">
-                    Menghapus data partner sales akan menghilangkan keterkaitannya pada laporan insentif & histori rekonsiliasi yang belum diselesaikan.
+                    Deleting sales representative data will remove their associations with incentive reports and pending reconciliation logs.
                   </p>
                 </div>
               </div>
 
               <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
-                <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Identitas Karyawan</p>
+                <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Employee Details</p>
                 <p className="font-bold text-slate-800 text-base mt-1">{deletingEmployee.name}</p>
                 <p className="text-xs text-slate-500 font-medium">{deletingEmployee.role} • {deletingEmployee.email}</p>
               </div>
@@ -672,7 +672,7 @@ export default function SalesEmployees({
                   onClick={() => setDeletingEmployee(null)}
                   className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-slate-500 text-sm font-medium transition cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -682,7 +682,7 @@ export default function SalesEmployees({
                   }}
                   className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition shadow-sm cursor-pointer"
                 >
-                  Ya, Hapus Karyawan
+                  Yes, Delete Representative
                 </button>
               </div>
             </div>
