@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { 
   X, Mail, Lock, User, ShieldCheck, 
-  Sparkles, AlertCircle, ArrowRight, CheckCircle2,
-  Building2, KeyRound
+  AlertCircle, ArrowRight, CheckCircle2,
+  KeyRound
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 
 interface AuthModalProps {
@@ -16,12 +16,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { 
     loginWithGoogle, 
     loginWithEmail, 
-    registerWithEmail, 
-    switchDemoUser,
-    isDemoMode
+    registerWithEmail
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   
   // Login form state
   const [email, setEmail] = useState('');
@@ -40,8 +38,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const REQUIRED_DOMAIN = '@labindonesia.co.id';
-
   const handleGoogleAuth = async () => {
     setLoading(true);
     setErrorMessage('');
@@ -52,7 +48,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Google sign-in failed. Please ensure your Google account uses a @labindonesia.co.id email address');
+      setErrorMessage(err.message || 'Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -65,10 +61,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail.endsWith(REQUIRED_DOMAIN)) {
-      setErrorMessage(`Access restricted! Only official company emails with the domain ${REQUIRED_DOMAIN} are allowed.`);
-      return;
-    }
     setLoading(true);
     setErrorMessage('');
     try {
@@ -78,7 +70,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage('Invalid email or password / unregistered user.');
+      setErrorMessage('Invalid email or password / unregistered user. Please click Register to create a new account.');
     } finally {
       setLoading(false);
     }
@@ -91,10 +83,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
     const cleanRegEmail = regEmail.trim().toLowerCase();
-    if (!cleanRegEmail.endsWith(REQUIRED_DOMAIN)) {
-      setErrorMessage(`Registration rejected! Only official company emails with the domain ${REQUIRED_DOMAIN} are allowed.`);
-      return;
-    }
     if (regPassword.length < 6) {
       setErrorMessage('Password must be at least 6 characters.');
       return;
@@ -103,23 +91,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setErrorMessage('');
     try {
       await registerWithEmail(cleanRegEmail, regPassword, regName, regRole);
-      setSuccessMessage('New account successfully registered!');
+      setSuccessMessage('New account successfully registered! You are now logged in.');
       setTimeout(() => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Account registration failed. Email might already be registered.');
+      setErrorMessage(err.message || 'Account registration failed. This email might already be registered.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoSwitch = (role: UserRole) => {
-    switchDemoUser(role);
-    setSuccessMessage(`Switched to demo account: ${role}`);
-    setTimeout(() => {
-      onClose();
-    }, 600);
   };
 
   return (
@@ -141,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h3 className="font-bold text-lg text-white">ChemLab Account Authentication</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Sign in or switch user roles for Laboratory CRM</p>
+              <p className="text-xs text-slate-400 mt-0.5">Sign in or create a new account for Laboratory CRM</p>
             </div>
           </div>
 
@@ -161,16 +141,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 activeTab === 'register' ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Register
-            </button>
-            <button
-              onClick={() => { setActiveTab('demo'); setErrorMessage(''); }}
-              className={`flex-1 py-2 px-3 rounded-lg transition cursor-pointer text-center flex items-center justify-center gap-1 ${
-                activeTab === 'demo' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              Demo Roles
+              Register New Account
             </button>
           </div>
         </div>
@@ -227,7 +198,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@labindonesia.co.id"
+                      placeholder="your.email@example.com"
                       className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"
                       required
                     />
@@ -280,14 +251,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Company Email (@labindonesia.co.id)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address (Any Email Allowed)</label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
                     type="email"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="name@labindonesia.co.id"
+                    placeholder="your.email@example.com"
                     className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"
                     required
                   />
@@ -321,9 +292,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <option value="Sales Executive">Sales Executive Account</option>
                   <option value="Laboratorium Tech">Laboratory Tech Account</option>
                 </select>
-                <p className="text-[10px] text-slate-500 mt-1">
-                  Note: All user accounts have equal full access to all CRM modules with strict per-account data isolation.
-                </p>
               </div>
 
               <button
@@ -337,41 +305,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </form>
           )}
 
-          {/* TAB 3: DEMO ROLES */}
-          {activeTab === 'demo' && (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500 mb-2 font-medium">
-                Select a preset role below to test the CRM features with different permission levels:
-              </p>
-
-              {(Object.keys(DEMO_USERS) as UserRole[]).map((role) => {
-                const demo = DEMO_USERS[role];
-                return (
-                  <div
-                    key={role}
-                    onClick={() => handleDemoSwitch(role)}
-                    className="p-3.5 bg-slate-50 hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 rounded-xl transition cursor-pointer flex items-center justify-between group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={demo.photoURL} 
-                        alt={demo.displayName}
-                        className="w-9 h-9 rounded-full object-cover border border-slate-200" 
-                      />
-                      <div>
-                        <div className="font-bold text-slate-800 text-xs group-hover:text-indigo-900">{demo.displayName}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">{demo.email}</div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 border border-indigo-200/80">
-                      {role}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
         </div>
 
         {/* Modal Footer */}
@@ -381,7 +314,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             Connected to Firebase Auth &amp; Firestore
           </span>
           <span className="font-mono text-[10px] text-slate-400">
-            {isDemoMode ? 'Mode: Demo Sandbox' : 'Mode: Firebase Live'}
+            Firebase Live Auth
           </span>
         </div>
 

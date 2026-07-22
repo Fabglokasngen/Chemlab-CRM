@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
   X, LogOut, ShieldCheck, Mail, Phone, 
-  Building2, Calendar, User, Sparkles, Check
+  Building2, Calendar, User, Check, LogIn
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 
 interface UserProfileModalProps {
@@ -17,7 +17,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onClose,
   onOpenAuthModal 
 }) => {
-  const { userProfile, logout, isDemoMode, updateRole } = useAuth();
+  const { userProfile, logout, updateRole } = useAuth();
   const [selectedRole, setSelectedRole] = useState<UserRole>(userProfile?.role || 'Administrator');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -73,7 +73,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   {userProfile.role}
                 </span>
                 <span className="text-[10px] text-slate-400">
-                  {isDemoMode ? 'Demo Sandbox' : 'Firebase Live'}
+                  Authenticated User
                 </span>
               </div>
             </div>
@@ -88,8 +88,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <span className="font-bold text-slate-800 mt-0.5 block">{userProfile.department || 'Lab Operations'}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-slate-400 font-semibold block text-[10px] uppercase">Contact Number</span>
-              <span className="font-bold text-slate-800 mt-0.5 block">{userProfile.phoneNumber || '+62 812-3456-7890'}</span>
+              <span className="text-slate-400 font-semibold block text-[10px] uppercase">User ID</span>
+              <span className="font-mono text-[10px] text-slate-600 mt-0.5 block truncate">{userProfile.uid}</span>
             </div>
           </div>
 
@@ -113,32 +113,17 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <option value="Sales Executive">Sales Executive Account</option>
               <option value="Laboratorium Tech">Laboratory Tech Account</option>
             </select>
-            <p className="text-[10px] text-slate-500 font-medium">
-              Data Security #1 Priority: All accounts enjoy equal access to all CRM modules, while your data remains strictly isolated to your account.
-            </p>
           </div>
 
           {/* Actions */}
           <div className="pt-2 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => {
-                onClose();
-                onOpenAuthModal();
-              }}
-              className="flex-1 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-indigo-600" />
-              Switch Account / Auth
-            </button>
-
-            <button
-              type="button"
               onClick={handleLogout}
-              className="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer border border-rose-200/60"
+              className="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl transition text-center flex items-center justify-center gap-1.5 cursor-pointer border border-rose-200/60"
             >
               <LogOut className="w-4 h-4" />
-              Logout
+              Sign Out Account
             </button>
           </div>
         </div>

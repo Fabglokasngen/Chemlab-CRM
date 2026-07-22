@@ -58,7 +58,7 @@ import {
 import { Service, Client, Project, Incentive, SalesEmployee, ActivityNote, ProjectStatus, PaymentStatus } from './types';
 
 function AppContent() {
-  const { userProfile, isDemoMode } = useAuth();
+  const { userProfile } = useAuth();
 
   // Navigation & Hover Sidebar
   const [activeTab, setActiveTab] = useState<'dashboard' | 'ongoing' | 'tracker' | 'clients' | 'catalog' | 'incentives'>('dashboard');
@@ -592,10 +592,10 @@ function AppContent() {
             {/* Mode status indicator */}
             <div className="text-[11px] text-slate-500 font-medium font-sans hidden md:flex items-center gap-1.5 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-200/80">
               <span className="inline-block relative">
-                <span className={`animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75 ${isDemoMode ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isDemoMode ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                <span className={`animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75 ${userProfile ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${userProfile ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
               </span>
-              <span className="font-semibold text-slate-700">{isDemoMode ? 'Demo Account' : 'Firebase Authenticated'}</span>
+              <span className="font-semibold text-slate-700">{userProfile ? 'Firebase Live' : 'Not Signed In'}</span>
             </div>
             
             {/* User Profile / Auth Trigger */}
