@@ -78,6 +78,53 @@
         "status": "string",
         "createdAt": "string"
       }
+    },
+    {
+      "name": "master_sales",
+      "schema": {
+        "id": "string",
+        "jamMasuk": "string",
+        "tanggalSampel": "string",
+        "dateParsed": "string",
+        "company": "string",
+        "nomorId": "string",
+        "invoice": "string",
+        "layananPengujian": "string",
+        "kategoriLayanan": "string",
+        "isMyAuthority": "boolean",
+        "jumlahSampel": "number",
+        "hargaPerSampel": "number",
+        "dppTotal": "number",
+        "ppn11": "number",
+        "totalPlusPpn": "number",
+        "payment": "string",
+        "paymentStatus": "string",
+        "clientTier": "string",
+        "incentiveRate": "number",
+        "incentiveAmount": "number",
+        "period": "string"
+      }
+    },
+    {
+      "name": "sales_journals",
+      "schema": {
+        "id": "string",
+        "date": "string",
+        "company": "string",
+        "contactPerson": "string",
+        "eventType": "string",
+        "discussionNotes": "string",
+        "hasObjection": "boolean",
+        "objectionCategory": "string",
+        "clientObjection": "string",
+        "strategyAction": "string",
+        "nextCommitment": "string",
+        "commitmentDate": "string",
+        "status": "string",
+        "priority": "string",
+        "salesPerson": "string",
+        "createdAt": "string"
+      }
     }
   ]
 }

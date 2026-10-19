@@ -1,0 +1,6 @@
+{
+  "summary": "Rencana implementasi peningkatan Master Data dengan pengujian walet lengkap, integrasi multi-ID ELSA per klien dengan riwayat kronologis, upload Excel bulanan dengan scoped replacement, log book pengeditan dan pelacak nama file, pencegahan duplikasi data, serta modul Quotation PDF parser dengan nominal subtotal DPP sebelum PPN dan fitur edit/hapus.",
+  "updatedAt": "2026-09-29T15:34:14.681565690Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

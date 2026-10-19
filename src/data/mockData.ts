@@ -66,6 +66,32 @@ export const INITIAL_CLIENTS: Client[] = [
     picPosition: 'QA/QC Manager',
     picEmail: 'hendra.s@indopangan.co.id',
     picPhone: '0812-3456-7890',
+    contacts: [
+      {
+        id: 'cnt-101',
+        name: 'Hendra Setiawan',
+        position: 'QA/QC Manager',
+        email: 'hendra.s@indopangan.co.id',
+        phone: '0812-3456-7890',
+        isPrimary: true
+      },
+      {
+        id: 'cnt-102',
+        name: 'Bambang Priyono',
+        position: 'R&D Senior Specialist',
+        email: 'bambang.p@indopangan.co.id',
+        phone: '0813-8899-1122',
+        isPrimary: false
+      },
+      {
+        id: 'cnt-103',
+        name: 'Siti Nurhaliza',
+        position: 'Procurement Officer',
+        email: 'siti.proc@indopangan.co.id',
+        phone: '0856-7788-9900',
+        isPrimary: false
+      }
+    ],
     leadSource: 'Referral',
     potentialRevenue: 25000000,
     assignedSales: 'Budi Santoso',
@@ -91,6 +117,24 @@ export const INITIAL_CLIENTS: Client[] = [
     picPosition: 'Regulatory Affairs Specialist',
     picEmail: 'dewi.lestari@biofarmalestari.com',
     picPhone: '0811-987-654',
+    contacts: [
+      {
+        id: 'cnt-201',
+        name: 'Dewi Lestari',
+        position: 'Regulatory Affairs Specialist',
+        email: 'dewi.lestari@biofarmalestari.com',
+        phone: '0811-987-654',
+        isPrimary: true
+      },
+      {
+        id: 'cnt-202',
+        name: 'Ir. Ahmad Subagyo',
+        position: 'Laboratory Compliance Lead',
+        email: 'ahmad.subagyo@biofarmalestari.com',
+        phone: '0812-9900-1122',
+        isPrimary: false
+      }
+    ],
     leadSource: 'Event',
     potentialRevenue: 15000000,
     assignedSales: 'Siti Rahma',

@@ -38,6 +38,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const parseAuthError = (err: any): string => {
+    const code = err?.code || '';
+    if (code === 'auth/popup-closed-by-user') {
+      return 'Sign-in cancelled (popup window was closed).';
+    }
+    if (code === 'auth/operation-not-allowed') {
+      return 'Email/Password authentication is currently not enabled in Firebase Console. Please use "Sign In with Google" or enable Email/Password under Firebase Console > Authentication > Sign-in method.';
+    }
+    if (code === 'auth/email-already-in-use') {
+      return 'This email address is already registered. Please sign in instead.';
+    }
+    if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+      return 'Invalid email or password. Please check your credentials or click "Register New Account".';
+    }
+    return err?.message || 'Authentication failed. Please try again.';
+  };
+
   const handleGoogleAuth = async () => {
     setLoading(true);
     setErrorMessage('');
@@ -48,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Google sign-in failed. Please try again.');
+      setErrorMessage(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -70,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage('Invalid email or password / unregistered user. Please click Register to create a new account.');
+      setErrorMessage(parseAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -96,7 +113,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }, 800);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Account registration failed. This email might already be registered.');
+      setErrorMessage(parseAuthError(err));
     } finally {
       setLoading(false);
     }

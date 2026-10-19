@@ -25,9 +25,18 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /master_sales/{docId} {
+      allow read, write: if true;
+    }
+
+    match /sales_journals/{docId} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if true;
     }
   }
 }
+
 

@@ -30,20 +30,13 @@ import {
 } from '../data/mockData';
 import { Service, Client, Project, Incentive, SalesEmployee, UserProfile, UserRole } from '../types';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCyw1X6bpHXh_cu4ZoPrX_yZ-RRtM6lQoY",
-  authDomain: "skillful-grin-k6ppv.firebaseapp.com",
-  projectId: "skillful-grin-k6ppv",
-  storageBucket: "skillful-grin-k6ppv.firebasestorage.app",
-  messagingSenderId: "1085522970663",
-  appId: "1:1085522970663:web:27ca291f80553f8aaba602"
-};
+import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with specific Database ID
-const db = getFirestore(app, "ai-studio-b426de26-e765-454b-af40-6d46739bbdf8");
+// Initialize Firestore with specific Database ID from config
+const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 // Initialize Auth & Providers
 const auth = getAuth(app);
@@ -202,20 +195,38 @@ async function seedCollection(collectionName: string, initialData: any[]) {
   }
 }
 
+// Helper to recursively remove undefined fields so Firestore doesn't throw errors
+function cleanUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefined(item)) as unknown as T;
+  }
+
+  const cleaned: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = cleanUndefined(value);
+    }
+  }
+  return cleaned as T;
+}
+
 // CRUD operations
 export async function dbAddService(service: Service) {
   const currentUid = auth.currentUser?.uid;
   const currentEmail = auth.currentUser?.email;
-  const data = {
+  const data = cleanUndefined({
     ...service,
     ...(currentUid ? { userId: currentUid } : {}),
     ...(currentEmail ? { ownerEmail: currentEmail } : {})
-  };
+  });
   await setDoc(doc(db, 'services', service.id), data);
 }
 
 export async function dbUpdateService(id: string, updated: Partial<Service>) {
-  await updateDoc(doc(db, 'services', id), updated);
+  await updateDoc(doc(db, 'services', id), cleanUndefined(updated));
 }
 
 export async function dbDeleteService(id: string) {
@@ -225,16 +236,16 @@ export async function dbDeleteService(id: string) {
 export async function dbAddClient(client: Client) {
   const currentUid = auth.currentUser?.uid;
   const currentEmail = auth.currentUser?.email;
-  const data = {
+  const data = cleanUndefined({
     ...client,
     ...(currentUid && !client.userId ? { userId: currentUid } : {}),
     ...(currentEmail && !client.ownerEmail ? { ownerEmail: currentEmail } : {})
-  };
+  });
   await setDoc(doc(db, 'clients', client.id), data);
 }
 
 export async function dbUpdateClient(id: string, updated: Partial<Client>) {
-  await updateDoc(doc(db, 'clients', id), updated);
+  await updateDoc(doc(db, 'clients', id), cleanUndefined(updated));
 }
 
 export async function dbDeleteClient(id: string) {
@@ -244,16 +255,16 @@ export async function dbDeleteClient(id: string) {
 export async function dbAddProject(project: Project) {
   const currentUid = auth.currentUser?.uid;
   const currentEmail = auth.currentUser?.email;
-  const data = {
+  const data = cleanUndefined({
     ...project,
     ...(currentUid && !project.userId ? { userId: currentUid } : {}),
     ...(currentEmail && !project.ownerEmail ? { ownerEmail: currentEmail } : {})
-  };
+  });
   await setDoc(doc(db, 'projects', project.id), data);
 }
 
 export async function dbUpdateProject(id: string, updated: Partial<Project>) {
-  await updateDoc(doc(db, 'projects', id), updated);
+  await updateDoc(doc(db, 'projects', id), cleanUndefined(updated));
 }
 
 export async function dbDeleteProject(id: string) {
@@ -263,16 +274,16 @@ export async function dbDeleteProject(id: string) {
 export async function dbAddIncentive(incentive: Incentive) {
   const currentUid = auth.currentUser?.uid;
   const currentEmail = auth.currentUser?.email;
-  const data = {
+  const data = cleanUndefined({
     ...incentive,
     ...(currentUid && !incentive.userId ? { userId: currentUid } : {}),
     ...(currentEmail && !incentive.ownerEmail ? { ownerEmail: currentEmail } : {})
-  };
+  });
   await setDoc(doc(db, 'incentives', incentive.id), data);
 }
 
 export async function dbUpdateIncentive(id: string, updated: Partial<Incentive>) {
-  await updateDoc(doc(db, 'incentives', id), updated);
+  await updateDoc(doc(db, 'incentives', id), cleanUndefined(updated));
 }
 
 export async function dbDeleteIncentive(id: string) {
@@ -280,11 +291,11 @@ export async function dbDeleteIncentive(id: string) {
 }
 
 export async function dbAddSalesEmployee(employee: SalesEmployee) {
-  await setDoc(doc(db, 'sales_employees', employee.id), employee);
+  await setDoc(doc(db, 'sales_employees', employee.id), cleanUndefined(employee));
 }
 
 export async function dbUpdateSalesEmployee(id: string, updated: Partial<SalesEmployee>) {
-  await updateDoc(doc(db, 'sales_employees', id), updated);
+  await updateDoc(doc(db, 'sales_employees', id), cleanUndefined(updated));
 }
 
 export async function dbDeleteSalesEmployee(id: string) {
@@ -312,4 +323,80 @@ export async function dbResetToStandard() {
     batch.set(doc(db, 'sales_employees', item.id), item);
   });
   await batch.commit();
+}
+
+// --- NULLIUS MASTER SALES & JOURNAL FIRESTORE OPS ---
+export async function getMasterSalesFromDb(): Promise<any[]> {
+  try {
+    const colRef = collection(db, 'master_sales');
+    const snapshot = await getDocs(colRef);
+    if (snapshot.empty) {
+      return [];
+    }
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, 'master_sales');
+    return [];
+  }
+}
+
+export async function saveMasterSalesBatchToDb(records: any[]): Promise<void> {
+  try {
+    const batch = writeBatch(db);
+    // Firestore batch limit is 500
+    const slice = records.slice(0, 450);
+    slice.forEach(r => {
+      const docRef = doc(db, 'master_sales', r.id);
+      batch.set(docRef, cleanUndefined(r));
+    });
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, 'master_sales');
+  }
+}
+
+export async function dbSaveMasterSaleRecord(record: any): Promise<void> {
+  try {
+    await setDoc(doc(db, 'master_sales', record.id), cleanUndefined(record), { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `master_sales/${record.id}`);
+  }
+}
+
+export async function dbDeleteMasterSaleRecord(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'master_sales', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `master_sales/${id}`);
+  }
+}
+
+export async function getSalesJournalsFromDb(): Promise<any[]> {
+  try {
+    const colRef = collection(db, 'sales_journals');
+    const snapshot = await getDocs(colRef);
+    if (snapshot.empty) {
+      return [];
+    }
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, 'sales_journals');
+    return [];
+  }
+}
+
+export async function dbSaveJournalEntry(entry: any): Promise<void> {
+  try {
+    await setDoc(doc(db, 'sales_journals', entry.id), cleanUndefined(entry), { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `sales_journals/${entry.id}`);
+  }
+}
+
+export async function dbDeleteJournalEntry(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'sales_journals', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `sales_journals/${id}`);
+  }
 }
